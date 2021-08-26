@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Kczer\ExcelImporterBundle;
+namespace Kczer\ExcelImporterBundle\Importer;
 
+use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
+use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
 use Kczer\ExcelImporterBundle\Exception\Annotation\ModelExcelColumnConfigurationException;
 use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
@@ -12,8 +14,11 @@ use Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 
 
-abstract class AbstractModelExcelImporter extends AbstractExcelImporter
+class ModelExcelImporter extends AbstractExcelImporter
 {
+    /** @var string */
+    private $importModelClass;
+
     /** @var ModelMetadataFactory */
     private $modelMetadataFactory;
 
@@ -27,8 +32,15 @@ abstract class AbstractModelExcelImporter extends AbstractExcelImporter
     private $models = [];
 
 
-    public function __construct(ModelMetadataFactory $modelMetadataFactory, ModelFactory $modelFactory)
+    public function __construct
+    (
+        ExcelCellFactory $excelCellFactory,
+        ExcelRowFactory $excelRowFactory,
+        ModelMetadataFactory $modelMetadataFactory,
+        ModelFactory $modelFactory
+    )
     {
+        parent::__construct($excelCellFactory, $excelRowFactory);
         $this->modelMetadataFactory = $modelMetadataFactory;
         $this->modelFactory = $modelFactory;
     }
@@ -44,15 +56,17 @@ abstract class AbstractModelExcelImporter extends AbstractExcelImporter
         return $this->models;
     }
 
-    /**
-     * Do something with parsed data (models available via getModels())
-     */
-    public abstract function processParsedData(): void;
+    public function getImportModelClass(): string
+    {
+        return $this->importModelClass;
+    }
 
-    /**
-     * @return string Fully qualified class name of model attached to this Importer instance
-     */
-    protected abstract function getImportModelClass(): string;
+    public function setImportModelClass(string $importModelClass): self
+    {
+        $this->importModelClass = $importModelClass;
+
+        return $this;
+    }
 
     /**
      * @throws UnexpectedExcelCellClassException

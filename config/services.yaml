@@ -1,4 +1,22 @@
 services:
-  Kczer\ExcelImporterBundle\:
-    resource: '../src/*'
-    exclude: '../src/{DependencyInjection}'
+  _defaults:
+    autowire: true
+  Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory:
+    public: true
+  Kczer\ExcelImporterBundle\Importer\ModelExcelImporter:
+    public: true
+  Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory:
+  Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory:
+  Kczer\ExcelImporterBundle\Model\Factory\ModelFactory:
+  Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory:
+  Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell:
+    public: true
+  Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\FloatExcelCell:
+    public: true
+  Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\IntegerExcelCell:
+    public: true
+  Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\StringExcelCell:
+    public: true
+  Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\DateTimeExcelCell:
+    public: true
+    

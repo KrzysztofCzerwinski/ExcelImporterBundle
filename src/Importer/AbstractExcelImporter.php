@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Kczer\ExcelImporterBundle;
+namespace Kczer\ExcelImporterBundle\Importer;
 
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Configuration\ExcelCellConfiguration;
@@ -10,7 +10,6 @@ use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelFileLoadException;
-use Kczer\ExcelImporterBundle\Exception\InvalidExcelImporterSerializedDataException;
 use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\JsonExcelRowsLoadException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -58,29 +57,9 @@ abstract class AbstractExcelImporter
 
 
     /**
-     * @throws InvalidExcelImporterSerializedDataException
-     */
-    public static function createFromSerialized(string $serializedData): self
-    {
-        $staticInstance = unserialize(base64_decode($serializedData));
-        if (!($staticInstance instanceof static)) {
-
-            throw new InvalidExcelImporterSerializedDataException(static::class);
-        }
-
-        return $staticInstance;
-    }
-
-
-    /**
      * @throws UnexpectedExcelCellClassException
      */
     protected abstract function configureExcelCells(): void;
-
-    /**
-     * Do something with parsed data (ExcelRows instances available via getExcelRows)
-     */
-    public abstract function processParsedData(): void;
 
 
     public function hasErrors(): bool
@@ -136,11 +115,6 @@ abstract class AbstractExcelImporter
                 return $excelRow->toArray();
             }, $this->excelRows)
         );
-    }
-
-    public function serializeInstance(): string
-    {
-        return base64_encode(serialize($this));
     }
 
     /**

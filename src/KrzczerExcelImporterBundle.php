@@ -5,6 +5,6 @@ namespace Kczer\ExcelImporterBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class ExcelImporterBundle extends Bundle
+class KrzczerExcelImporterBundle extends Bundle
 {
 }

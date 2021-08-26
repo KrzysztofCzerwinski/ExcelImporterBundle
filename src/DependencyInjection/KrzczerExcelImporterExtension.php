@@ -9,7 +9,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 
-class ExcelImporterExtension extends Extension
+class KrzczerExcelImporterExtension extends Extension
 {
     /**
      * @inheritDoc
@@ -21,7 +21,5 @@ class ExcelImporterExtension extends Extension
         $configDir = new FileLocator(__DIR__ . '/../../config');
         $loader = new YamlFileLoader($container, $configDir);
         $loader->load('services.yaml');
-        $this->processConfiguration(new ConfigSchema(), $configs);
-        var_dump($container->getAliases());
     }
 }
