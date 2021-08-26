@@ -1,0 +1,4 @@
+services:
+  Kczer\ExcelImporterBundle\:
+    resource: '../src/*'
+    exclude: '../src/{DependencyInjection}'
