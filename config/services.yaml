@@ -9,6 +9,9 @@ services:
   Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory:
   Kczer\ExcelImporterBundle\Model\Factory\ModelFactory:
   Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory:
+  Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractDictionaryExcelCell:
+    abstract: true
+    public: true
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell:
     public: true
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\FloatExcelCell:
