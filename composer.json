@@ -1,5 +1,5 @@
 {
-    "name": "czerwinski/excel-importer-bundle",
+    "name": "kczer/excel-importer-bundle",
     "description": "kczer/excel-importer library adjusted for Symfony framerowk",
     "type": "symfony-bundle",
     "require": {
