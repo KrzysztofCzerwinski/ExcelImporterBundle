@@ -21,6 +21,9 @@ use function key;
 
 abstract class AbstractExcelImporter
 {
+    /** @var ?callable */
+    private $rowRequirementsValidator = null;
+
     /** @var ExcelCellFactory */
     private $excelCellFactory;
 
@@ -37,6 +40,19 @@ abstract class AbstractExcelImporter
     {
         $this->excelCellFactory = $excelCellFactory;
         $this->excelRowFactory = $excelRowFactory;
+    }
+
+    /**
+     * @param callable $rowRequirementsValidator
+     * Callback that takes one argument (array of ExcelRow objects) and add some additional error messages if needed
+     *
+     * @return $this
+     */
+    public function setRowRequirementsValidator(callable $rowRequirementsValidator): self
+    {
+        $this->rowRequirementsValidator = $rowRequirementsValidator;
+
+        return $this;
     }
 
     /**
@@ -132,15 +148,9 @@ abstract class AbstractExcelImporter
             }
             $this->excelRows[] = $this->excelRowFactory->createFromExcelCellSkeletonsAndRawCellValues($skeletonExcelCells, $this->parseRawCellValuesString($rawCellValues));
         }
-        $this->checkRowRequirements();
-    }
-
-    /**
-     * Checks any additional requirements- useful to check requirements between separate cells or rows. <br>
-     * Errors can be added via ExcelRow::addErrorMessage
-     */
-    protected function checkRowRequirements(): void
-    {
+        if (null !== $this->rowRequirementsValidator) {
+            [$this, 'rowRequirementsValidator']($this->excelCellConfigurations);
+        }
     }
 
     /**

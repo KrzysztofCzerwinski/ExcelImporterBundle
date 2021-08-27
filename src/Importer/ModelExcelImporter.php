@@ -7,6 +7,7 @@ use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
 use Kczer\ExcelImporterBundle\Exception\Annotation\ModelExcelColumnConfigurationException;
 use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
+use Kczer\ExcelImporterBundle\Exception\EmptyModelClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelFactory;
@@ -56,8 +57,15 @@ class ModelExcelImporter extends AbstractExcelImporter
         return $this->models;
     }
 
+    /**
+     * @throws EmptyModelClassException
+     */
     public function getImportModelClass(): string
     {
+        if (null === $this->importModelClass) {
+
+            throw new EmptyModelClassException(static::class);
+        }
         return $this->importModelClass;
     }
 
@@ -78,9 +86,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     {
         $this->assignModelMetadata();
         parent::parseRawExcelRows($rawExcelRows, $skipFirstRow);
-        if (!$this->hasErrors()) {
-            $this->models = $this->modelFactory->createModelsFromExcelRowsAndModelMetadata($this->getImportModelClass(), $this->getExcelRows(), $this->modelMetadata);
-        }
+        $this->models = $this->modelFactory->createModelsFromExcelRowsAndModelMetadata($this->getImportModelClass(), $this->getExcelRows(), $this->modelMetadata);
     }
 
     /**

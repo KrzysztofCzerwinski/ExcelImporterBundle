@@ -34,16 +34,26 @@ class ExcelRow
         $this->rowRelatedErrorMessages[] = $errorMessage;
     }
 
+
+    public function addErrorMessages(array $errorMessage): void
+    {
+        $this->rowRelatedErrorMessages = array_merge($errorMessage, $this->rowRelatedErrorMessages);
+    }
+
     /**
+     * @param bool $attachValues Whether to add value info to the messages
+     *
      * @return string[]
      */
-    public function getAllErrorMessages(): array
+    public function getAllErrorMessages(bool $attachValues = false): array
     {
         return array_filter(
             array_merge(
                 $this->rowRelatedErrorMessages,
-                array_map(static function (AbstractExcelCell $excelCell): ?string {
-                    return $excelCell->getErrorMessage();
+                array_map(static function (AbstractExcelCell $excelCell) use ($attachValues): ?string {
+                    $errorMessage = $excelCell->getErrorMessage();
+
+                    return $attachValues && null !== $errorMessage ? "$errorMessage ({$excelCell->getDisplayValue()})" : $errorMessage;
                 }, $this->excelCells)
             )
         );
@@ -61,18 +71,14 @@ class ExcelRow
     }
 
     /**
-     * @param callable|null $messageTransformer <br>
-     * Callback function applied to each message (takes one string argument and should return string)
+     * @param bool $attachValues Whether to add values info to message
      * @param string $separator string used to separate the messages
      *
      * @return string messages from all ExcelCells merged into one string
      */
-    public function getMergedAllErrorMessages(?callable $messageTransformer = null, string $separator = ' | '): string
+    public function getMergedAllErrorMessages(bool $attachValues = false, string $separator = ' | '): string
     {
-        $errorMessages = $this->getAllErrorMessages();
-        $errorMessages = null !== $messageTransformer ? array_map($messageTransformer, $errorMessages) : $errorMessages;
-
-        return implode($separator, $errorMessages);
+        return implode($separator, $this->getAllErrorMessages($attachValues));
     }
 
     /**
