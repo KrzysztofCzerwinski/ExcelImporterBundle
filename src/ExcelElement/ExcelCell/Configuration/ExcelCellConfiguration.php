@@ -19,7 +19,7 @@ class ExcelCellConfiguration
     private $cellRequired;
 
     /**
-     * @param string $excelCellClass Excel cell class extending KCzer\ExcelImporter\ExcelElement\ExcelCell\AbstractExcelCell
+     * @param string $excelCellClass Excel cell class extending Kczer\ExcelImporter\ExcelElement\ExcelCell\AbstractExcelCell
      * @param string $cellName Cell name in EXCEL file
      * @param bool $cellRequired Whether cell value is required in an EXCEL file
      *
