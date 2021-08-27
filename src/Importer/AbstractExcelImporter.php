@@ -14,7 +14,9 @@ use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\JsonExcelRowsLoadException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Throwable;
+use function array_filter;
 use function array_map;
+use function array_values;
 use function json_decode;
 use function json_encode;
 use function key;
@@ -142,7 +144,10 @@ abstract class AbstractExcelImporter
         $this->configureExcelCells();
         $skeletonExcelCells = $this->createSkeletonExcelCells();
         foreach ($rawExcelRows as $rowKey => $rawCellValues) {
-            if ($skipFirstRow && key($rawExcelRows) === $rowKey) {
+            if (
+                ($skipFirstRow && key($rawExcelRows) === $rowKey) ||
+                $this->areAllRawExcelCellValuesEmpty($rawCellValues)
+            ) {
 
                 continue;
             }
@@ -151,6 +156,7 @@ abstract class AbstractExcelImporter
         if (null !== $this->rowRequirementsValidator) {
             ($this->rowRequirementsValidator)($this->excelRows);
         }
+        $this->excelRows = array_values($this->excelRows);
     }
 
     /**
@@ -186,6 +192,16 @@ abstract class AbstractExcelImporter
     private function parseRawCellValuesString(array $rawCellValues): array
     {
         return array_map('strval', $rawCellValues);
+    }
+
+    /**
+     * @param string[] $rawExcelCellValues
+     *
+     * @return bool
+     */
+    private function areAllRawExcelCellValuesEmpty(array $rawExcelCellValues): bool
+    {
+        return empty(array_filter($rawExcelCellValues));
     }
 
 }
