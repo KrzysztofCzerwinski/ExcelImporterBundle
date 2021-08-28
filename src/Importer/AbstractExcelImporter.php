@@ -23,6 +23,13 @@ use function key;
 
 abstract class AbstractExcelImporter
 {
+    public const FIRST_ROW_MODE_SKIP = 1;
+
+    public const FIRST_ROW_MODE_DONT_SKIP = 2;
+
+    public const FIRST_ROW_MODE_DONT_SKIP_IF_INVALID = 4;
+
+
     /** @var ?callable */
     private $rowRequirementsValidator = null;
 
@@ -108,11 +115,19 @@ abstract class AbstractExcelImporter
     }
 
     /**
+     * @param string $excelFilePath
+     * @param int $firstRowMode DEFINES what to do with the first EXCEL row. Possible values: <br>
+     * FIRST_ROW_MODE_SKIP <br>
+     * FIRST_ROW_MODE_DONT_SKIP <br>
+     * FIRST_ROW_MODE_DONT_SKIP_IF_INVALID <br>
+     *
+     * @return $this
+     *
      * @throws EmptyExcelColumnException
      * @throws ExcelFileLoadException
      * @throws UnexpectedExcelCellClassException
      */
-    public function parseExcelFile(string $excelFilePath): self
+    public function parseExcelFile(string $excelFilePath, int $firstRowMode = self::FIRST_ROW_MODE_SKIP): self
     {
         try {
             $sheet = IOFactory::load($excelFilePath)->getActiveSheet();
@@ -121,7 +136,7 @@ abstract class AbstractExcelImporter
 
             throw new ExcelFileLoadException($excelFilePath, $exception);
         }
-        $this->parseRawExcelRows($rawExcelRows);
+        $this->parseRawExcelRows($rawExcelRows, $firstRowMode);
 
         return $this;
     }
@@ -139,19 +154,29 @@ abstract class AbstractExcelImporter
      * @throws EmptyExcelColumnException
      * @throws UnexpectedExcelCellClassException
      */
-    protected function parseRawExcelRows(array $rawExcelRows, bool $skipFirstRow = true): void
+    protected function parseRawExcelRows(array $rawExcelRows, int $firstRowMode): void
     {
         $this->configureExcelCells();
         $skeletonExcelCells = $this->createSkeletonExcelCells();
+
         foreach ($rawExcelRows as $rowKey => $rawCellValues) {
+            $isFirstRow = key($rawExcelRows) === $rowKey;
             if (
-                ($skipFirstRow && key($rawExcelRows) === $rowKey) ||
+                ($isFirstRow && ($firstRowMode & self::FIRST_ROW_MODE_SKIP)) ||
                 $this->areAllRawExcelCellValuesEmpty($rawCellValues)
             ) {
 
                 continue;
             }
-            $this->excelRows[] = $this->excelRowFactory->createFromExcelCellSkeletonsAndRawCellValues($skeletonExcelCells, $this->parseRawCellValuesString($rawCellValues));
+
+            $excelRow = $this->excelRowFactory->createFromExcelCellSkeletonsAndRawCellValues($skeletonExcelCells, $this->parseRawCellValuesString($rawCellValues));
+            if ($isFirstRow && ($firstRowMode & self::FIRST_ROW_MODE_DONT_SKIP_IF_INVALID) && $excelRow->hasErrors()) {
+                $excelRow = null;
+            }
+
+            if (null !== $excelRow) {
+                $this->excelRows[] = $excelRow;
+            }
         }
         if (null !== $this->rowRequirementsValidator) {
             ($this->rowRequirementsValidator)($this->excelRows);

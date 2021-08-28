@@ -82,10 +82,10 @@ class ModelExcelImporter extends AbstractExcelImporter
      * @throws ModelExcelColumnConfigurationException
      * @throws ExcelImportConfigurationException
      */
-    protected function parseRawExcelRows(array $rawExcelRows, bool $skipFirstRow = true): void
+    protected function parseRawExcelRows(array $rawExcelRows, int $firstRowMode): void
     {
         $this->assignModelMetadata();
-        parent::parseRawExcelRows($rawExcelRows, $skipFirstRow);
+        parent::parseRawExcelRows($rawExcelRows, $firstRowMode);
         $this->models = $this->modelFactory->createModelsFromExcelRowsAndModelMetadata($this->getImportModelClass(), $this->getExcelRows(), $this->modelMetadata);
     }
 
