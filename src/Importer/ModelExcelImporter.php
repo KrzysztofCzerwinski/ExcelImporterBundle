@@ -5,9 +5,10 @@ namespace Kczer\ExcelImporterBundle\Importer;
 
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
-use Kczer\ExcelImporterBundle\Exception\Annotation\ModelExcelColumnConfigurationException;
+use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
 use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\EmptyModelClassException;
+use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelFactory;
@@ -79,7 +80,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     /**
      * @throws UnexpectedExcelCellClassException
      * @throws EmptyExcelColumnException
-     * @throws ModelExcelColumnConfigurationException
+     * @throws AnnotationConfigurationException
      * @throws ExcelImportConfigurationException
      */
     protected function parseRawExcelRows(array $rawExcelRows, int $firstRowMode): void
@@ -90,20 +91,20 @@ class ModelExcelImporter extends AbstractExcelImporter
     }
 
     /**
-     * @throws UnexpectedExcelCellClassException
+     * @throws UnexpectedClassException
      */
     protected function configureExcelCells(): void
     {
         foreach ($this->modelMetadata->getModelPropertiesMetadata() as $columnKey => $propertyMetadata) {
             $propertyExcelColumn = $propertyMetadata->getExcelColumn();
 
-            $this->addExcelCell($propertyExcelColumn->getTargetExcelCellClass(), $propertyExcelColumn->getCellName(), $columnKey, $propertyExcelColumn->isRequired());
+            $this->addExcelCell($propertyExcelColumn->getTargetExcelCellClass(), $propertyExcelColumn->getCellName(), $columnKey, $propertyExcelColumn->isRequired(), $propertyMetadata->getValidators());
         }
     }
 
     /**
      * @throws ExcelImportConfigurationException
-     * @throws ModelExcelColumnConfigurationException
+     * @throws AnnotationConfigurationException
      */
     private function assignModelMetadata(): void
     {

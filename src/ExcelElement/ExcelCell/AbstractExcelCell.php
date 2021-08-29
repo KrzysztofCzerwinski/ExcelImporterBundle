@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
 
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
 use Kczer\ExcelImporterBundle\MessageInterface;
 use function trim;
 
@@ -21,13 +22,15 @@ abstract class AbstractExcelCell
     /** @var bool */
     protected $required;
 
+    /** @var AbstractValidator[] */
+    private $validators = [];
 
     public function getName(): string
     {
         return $this->name;
     }
 
-    public function setName(string $name): AbstractExcelCell
+    public function setName(string $name): self
     {
         $this->name = $name;
         return $this;
@@ -59,6 +62,23 @@ abstract class AbstractExcelCell
     {
         $this->errorMessage = $errorMessage;
 
+        return $this;
+    }
+
+    /**
+     * @return AbstractValidator[]
+     */
+    public function getValidators(): array
+    {
+        return $this->validators;
+    }
+
+    /**
+     * @param AbstractValidator[] $validators
+     */
+    public function setValidators(array $validators): self
+    {
+        $this->validators = $validators;
         return $this;
     }
 
@@ -106,7 +126,7 @@ abstract class AbstractExcelCell
             ($this->required && !$this->hasError()) ||
             (!$this->required && null !== $this->rawValue)
         ) {
-            $this->setErrorMessage($this->validateValueRequirements());
+            $this->setErrorMessage($this->validateValueWithValidators() ?? $this->validateValueRequirements());
         }
 
         return $this;
@@ -120,9 +140,22 @@ abstract class AbstractExcelCell
         return sprintf('%s- %s', $this->name, $errorMessage);
     }
 
+    private function validateValueWithValidators(): ?string
+    {
+        foreach ($this->validators as $validator) {
+            if (!$validator->isExcelCellValueValid($this->rawValue)) {
+
+                return $this->createErrorMessageWithNamePrefix($validator->getMessage());
+            }
+        }
+
+        return null;
+    }
+
     private function validateValueObligatory(): ?string
     {
         if (null === $this->rawValue && $this->required) {
+
             return $this->createErrorMessageWithNamePrefix(MessageInterface::VALUE_REQUIRED);
         }
 

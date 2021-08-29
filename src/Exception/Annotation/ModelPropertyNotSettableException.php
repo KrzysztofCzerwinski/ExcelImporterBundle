@@ -9,7 +9,7 @@ use ReflectionClass;
 use Throwable;
 use function sprintf;
 
-class ModelPropertyNotSettableException extends ModelExcelColumnConfigurationException
+class ModelPropertyNotSettableException extends AnnotationConfigurationException
 {
     public function __construct(ModelPropertyMetadata $modelPropertyMetadata, ReflectionClass $modelReflectionClass, Throwable $previous = null)
     {

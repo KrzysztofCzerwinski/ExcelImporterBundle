@@ -6,7 +6,7 @@ namespace Kczer\ExcelImporterBundle\Exception\Annotation;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Throwable;
 
-class UnexpectedColumnExcelCellClassException extends ModelExcelColumnConfigurationException
+class UnexpectedColumnExcelCellClassException extends AnnotationConfigurationException
 {
     public function __construct(string $givenClass, string $propertyName, Throwable $previous = null)
     {

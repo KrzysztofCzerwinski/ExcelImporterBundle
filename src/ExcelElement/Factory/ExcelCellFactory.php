@@ -23,6 +23,9 @@ class ExcelCellFactory
         /** @var AbstractExcelCell $excelCell */
         $excelCell = $this->container->get($excelCellClass);
 
-        return $excelCell->setName($configuration->getCellName())->setRequired($configuration->isCellRequired());
+        return $excelCell
+            ->setName($configuration->getCellName())
+            ->setRequired($configuration->isCellRequired())
+            ->setValidators($configuration->getValidators());
     }
 }

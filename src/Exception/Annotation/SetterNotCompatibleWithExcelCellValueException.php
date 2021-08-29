@@ -7,7 +7,7 @@ use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\Model\ModelPropertyMetadata;
 use Throwable;
 
-class SetterNotCompatibleWithExcelCellValueException extends ModelExcelColumnConfigurationException
+class SetterNotCompatibleWithExcelCellValueException extends AnnotationConfigurationException
 {
     public function __construct(AbstractExcelCell $excelCell, ModelPropertyMetadata $modelPropertyMetadata, Throwable $previous = null)
     {

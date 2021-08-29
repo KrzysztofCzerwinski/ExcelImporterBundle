@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Kczer\ExcelImporterBundle\Model;
 
 use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
 
 class ModelPropertyMetadata
 {
@@ -15,6 +16,9 @@ class ModelPropertyMetadata
 
     /** @var string */
     private $propertyName;
+
+    /** @var AbstractValidator[] */
+    private $validators;
 
 
     public function getExcelColumn(): ExcelColumn
@@ -44,8 +48,17 @@ class ModelPropertyMetadata
         return sprintf('%s%s', 'set', ucfirst($this->propertyName));
     }
 
-    public function hasColumnId(): bool
+    /**
+     * @return AbstractValidator[]
+     */
+    public function getValidators(): array
     {
-        return null !== $this->excelColumn->getColumnKey();
+        return $this->validators;
+    }
+
+    public function setValidators(array $validators): ModelPropertyMetadata
+    {
+        $this->validators = $validators;
+        return $this;
     }
 }

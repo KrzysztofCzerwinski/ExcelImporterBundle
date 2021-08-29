@@ -8,7 +8,7 @@ use function gettype;
 use function is_object;
 use function sprintf;
 
-class InvalidAnnotationParamException extends ModelExcelColumnConfigurationException
+class InvalidAnnotationParamException extends AnnotationConfigurationException
 {
     public function __construct(string $paramName, string $annotationClass, $givenParam, string $expectedType, Throwable $previous = null)
     {

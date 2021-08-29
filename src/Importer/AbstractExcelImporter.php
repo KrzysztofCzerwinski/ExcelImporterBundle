@@ -5,9 +5,11 @@ namespace Kczer\ExcelImporterBundle\Importer;
 
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Configuration\ExcelCellConfiguration;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelRow;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
+use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelFileLoadException;
 use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
@@ -184,11 +186,19 @@ abstract class AbstractExcelImporter
     }
 
     /**
-     * @throws UnexpectedExcelCellClassException
+     * @param string $excelCellClass Excel cell class extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell
+     * @param string $cellName Cell name in EXCEL file
+     * @param string $columnKey Column key in EXCEL file
+     * @param bool $cellRequired Whether cell value is required in an EXCEL file
+     * @param AbstractValidator[] $validators Validators extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator that will validate raw value
+     *
+     * @return AbstractExcelImporter
+     *
+     * @throws UnexpectedClassException
      */
-    protected function addExcelCell(string $excelCellClass, string $cellName, string $columnKey, bool $cellRequired = true): self
+    protected function addExcelCell(string $excelCellClass, string $cellName, string $columnKey, bool $cellRequired = true, array $validators = []): self
     {
-        $this->excelCellConfigurations[$columnKey] = new ExcelCellConfiguration($excelCellClass, $cellName, $cellRequired);
+        $this->excelCellConfigurations[$columnKey] = new ExcelCellConfiguration($excelCellClass, $cellName, $cellRequired, $validators);
 
         return $this;
     }

@@ -49,6 +49,8 @@ class ExcelColumn
 
 
     /**
+     * @param array{cellName: string, targetExcelCellClass: string, required: bool, columnKey: string} $annotationData
+     *
      * @throws InvalidAnnotationParamException
      */
     public function __construct(array $annotationData)

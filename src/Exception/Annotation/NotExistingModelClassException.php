@@ -5,7 +5,7 @@ namespace Kczer\ExcelImporterBundle\Exception\Annotation;
 
 use Throwable;
 
-class NotExistingModelClassException extends ModelExcelColumnConfigurationException
+class NotExistingModelClassException extends AnnotationConfigurationException
 {
     public function __construct(string $givenClass, Throwable $previous = null)
     {

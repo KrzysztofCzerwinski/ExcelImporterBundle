@@ -5,18 +5,17 @@ namespace Kczer\ExcelImporterBundle;
 
 interface MessageInterface
 {
-    /** @var string */
     public const VALUE_REQUIRED = 'Wartość wymagana';
 
-    /** @var string */
     public const INT_VALUE_REQUIRED = 'Wymagana liczba całkowita';
 
-    /** @var string */
     public const NUMERIC_VALUE_REQUIRED = 'Wymagana wartość liczbowa';
 
-    /** @var string */
     public const DATETIME_STRING_VALUE_REQUIRED = 'Wymagana data';
 
-    /** @var string */
     public const DICTIONARY_VALUE_NOT_FOUND = 'Wartość nie znaleziona w słowniku';
+
+    public const REGEX_VALIDATOR_DEFAULT_MESSAGE = 'Wartość nie spełnia wyrażenia regularnego "{pattern}"';
+
+    public const LENGTH_VALIDATOR_DEFAULT_MESSAGE = 'Wartość nie mieści się w przeziale długości od {minLength} do {maxLength}';
 }
