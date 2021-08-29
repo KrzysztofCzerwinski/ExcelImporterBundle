@@ -171,12 +171,11 @@ abstract class AbstractExcelImporter
 
             $excelRow = $this->excelRowFactory->createFromExcelCellSkeletonsAndRawCellValues($skeletonExcelCells, $this->parseRawCellValuesString($rawCellValues));
             if ($isFirstRow && ($firstRowMode & self::FIRST_ROW_MODE_DONT_SKIP_IF_INVALID) && $excelRow->hasErrors()) {
-                $excelRow = null;
+
+                continue;
             }
 
-            if (null !== $excelRow) {
-                $this->excelRows[] = $excelRow;
-            }
+            $this->excelRows[] = $excelRow;
         }
         if (null !== $this->rowRequirementsValidator) {
             ($this->rowRequirementsValidator)($this->excelRows);
