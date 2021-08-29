@@ -10,16 +10,21 @@ services:
   Kczer\ExcelImporterBundle\Model\Factory\ModelFactory:
   Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory:
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractDictionaryExcelCell:
+    shared: false
     abstract: true
     public: true
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell:
+    shared: false
     public: true
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\FloatExcelCell:
+    shared: false
     public: true
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\IntegerExcelCell:
+    shared: false
     public: true
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\StringExcelCell:
+    shared: false
     public: true
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\DateTimeExcelCell:
+    shared: false
     public: true
-    
