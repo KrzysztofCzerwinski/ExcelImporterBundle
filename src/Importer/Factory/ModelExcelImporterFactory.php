@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Importer\Factory;
 
+use Kczer\ExcelImporterBundle\Exception\UnexpectedDisplayModelClassException;
 use Kczer\ExcelImporterBundle\Importer\ModelExcelImporter;
+use Kczer\ExcelImporterBundle\Model\DisplayModelInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use function is_subclass_of;
 
 class ModelExcelImporterFactory
 {
@@ -17,11 +20,19 @@ class ModelExcelImporterFactory
         $this->container = $container;
     }
 
-    public function createModelExcelImporter(string $modelClass): ModelExcelImporter
+    /**
+     * @throws UnexpectedDisplayModelClassException
+     */
+    public function createModelExcelImporter(string $modelClass, ?string $displayModelClass = null): ModelExcelImporter
     {
         /** @var ModelExcelImporter $modelExcelImporter*/
         $modelExcelImporter = $this->container->get(ModelExcelImporter::class);
 
-        return $modelExcelImporter->setImportModelClass($modelClass);
+        if (null !== $displayModelClass && !is_subclass_of($displayModelClass, DisplayModelInterface::class, true)) {
+
+            throw new UnexpectedDisplayModelClassException($modelClass);
+        }
+
+        return $modelExcelImporter->setImportModelClass($modelClass)->setDisplayModelClass($displayModelClass);
     }
 }

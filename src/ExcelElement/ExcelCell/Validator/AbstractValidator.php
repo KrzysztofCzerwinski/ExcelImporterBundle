@@ -3,36 +3,24 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator;
 
-use Kczer\ExcelImporterBundle\Exception\MissingValidatorOptionsException;
-use function array_keys;
+use function str_replace;
 
 abstract class AbstractValidator
 {
-    /** @var array */
-    protected $options;
-
     /** @var string */
     private $message;
 
-    /**
-     * @param array{errorMessage: string} $options Options custom for reach validator (error message is common for each) <br>
-     *  Each option can be wrapped into curly braces to display its value like '{someOption}'
-     *
-     * @throws MissingValidatorOptionsException
-     */
-    public function __construct(array $options)
+
+    public function __construct(string $message)
     {
-        $this->validateOptions($options, $this->getRequiredOptionNames());
-        $this->message = $options['message'] ?? '';
-        $this->options = $options;
+        $this->message = $message;
     }
 
     public function getMessage(): string
     {
         $errorMessage = $this->message;
-        foreach ($this->options as $optionName => $optionValue) {
-            if ('message' !== $optionName)
-                $errorMessage = str_replace("{{$optionName}}" , (string)$optionValue, $errorMessage);
+        foreach ($this->getReplaceableProperties() as $propertyName => $propertyValue) {
+            $errorMessage = str_replace("{{$propertyName}}" , (string)$propertyValue, $errorMessage);
         }
 
         return $errorMessage;
@@ -44,19 +32,7 @@ abstract class AbstractValidator
     public abstract function isExcelCellValueValid(string $rawValue): bool;
 
     /**
-     * @return string[]
+     * @return array Array of properties that can be replaced with {propertyName} syntax in message
      */
-    protected abstract function getRequiredOptionNames(): array;
-
-    /**
-     * @throws MissingValidatorOptionsException
-     */
-    private function validateOptions(array $options, array $requiredOptions): void
-    {
-        $missingOptionNames = array_diff($requiredOptions, array_keys($options));
-        if (!empty($missingOptionNames)) {
-
-            throw new MissingValidatorOptionsException($missingOptionNames);
-        }
-    }
+    protected abstract function getReplaceableProperties(): array;
 }

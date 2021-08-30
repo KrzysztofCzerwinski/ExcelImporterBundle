@@ -5,6 +5,7 @@ namespace Kczer\ExcelImporterBundle\Annotation\Validator;
 
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\Target;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
 
 /**
  * @Annotation
@@ -23,7 +24,7 @@ abstract class AbstractExcelColumnValidator
     protected $options;
 
     /**
-     @param array{message: string} $annotationData
+     * @param array{message: string} $annotationData
      */
     public function __construct(array $annotationData)
     {
@@ -32,9 +33,9 @@ abstract class AbstractExcelColumnValidator
     }
 
     /**
-     * @return string name of Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator extending class
+     * @return AbstractValidator Instance of Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator extending class
      */
-    public abstract function getValidatorClass(): string;
+    public abstract function getRelatedValidator(): AbstractValidator;
 
     public function getMessage(): string
     {

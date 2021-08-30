@@ -9,6 +9,8 @@ use Kczer\ExcelImporterBundle\Annotation\Validator\AbstractExcelColumnValidator;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
 use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
+use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidDisplayModelSetterParameterTypeException;
+use Kczer\ExcelImporterBundle\Exception\Annotation\MissingModelPropertyException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\ModelPropertyNotSettableException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\NotExistingModelClassException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedColumnExcelCellClassException;
@@ -38,12 +40,19 @@ class ModelMetadataFactory
      * @throws AnnotationConfigurationException
      * @throws ExcelImportConfigurationException
      */
-    public function createMetadataFromModelClass(string $modelClass): ModelMetadata
+    public function createMetadataFromModelClass(string $modelClass, ?string $displayModelClass): ModelMetadata
     {
         $modelReflectionClass = $this->obtainModelReflectionClass($modelClass);
+        $isModelClassDefined = null !== $displayModelClass;
+        $displayModelReflectionClass = $isModelClassDefined ? $this->obtainModelReflectionClass($displayModelClass) : null;
 
         $modelPropertiesMetadata = [];
         foreach ($modelReflectionClass->getProperties() as $reflectionProperty) {
+            if ($isModelClassDefined && !$displayModelReflectionClass->hasProperty($reflectionProperty->getName())) {
+
+                throw new MissingModelPropertyException($displayModelReflectionClass->getName(), $reflectionProperty->getName());
+            }
+
             /** @var ExcelColumn|null $excelColumn */
             $excelColumn = $this->annotationReader->getPropertyAnnotation($reflectionProperty, ExcelColumn::class);
             if (null === $excelColumn) {
@@ -56,6 +65,9 @@ class ModelMetadataFactory
                 ->setValidators($this->getPropertyValidators($reflectionProperty));
 
             $this->validateExcelCellClass($modelPropertyMetadata)->validatePropertySettable($modelReflectionClass, $modelPropertyMetadata);
+            if ($isModelClassDefined) {
+                $this->validateExcelCellClass($modelPropertyMetadata)->validatePropertySettable($displayModelReflectionClass, $modelPropertyMetadata);
+            }
             $columnKey = $excelColumn->getColumnKey();
             if (key_exists($columnKey, $modelPropertiesMetadata)) {
 
@@ -112,7 +124,22 @@ class ModelMetadataFactory
 
             throw new ModelPropertyNotSettableException($modelPropertyMetadata, $modelReflectionClass);
         }
+    }
 
+    /**
+     * @throws ReflectionException
+     * @throws InvalidDisplayModelSetterParameterTypeException
+     */
+    private function validateDisplayModelSetterType(ReflectionClass $modelReflectionClass, ModelPropertyMetadata $displayModelPropertyMetadata): void
+    {
+        $setterReflection = $modelReflectionClass->getMethod($displayModelPropertyMetadata->getSetterName());
+        $reflectionSetterParameter = current($setterReflection->getParameters());
+
+        $reflectionSetterParameterType = false !== $reflectionSetterParameter ? $reflectionSetterParameter->getType() : 'string';
+        if('string' !== $reflectionSetterParameterType) {
+
+            throw new InvalidDisplayModelSetterParameterTypeException($modelReflectionClass->getName(), $setterReflection->getName(), $reflectionSetterParameter->getName(), $reflectionSetterParameterType);
+        }
     }
 
     /**
@@ -127,9 +154,8 @@ class ModelMetadataFactory
         });
 
         return array_map(static function (AbstractExcelColumnValidator $excelColumnValidator): AbstractValidator {
-            $validatorClass = $excelColumnValidator->getValidatorClass();
 
-            return new $validatorClass($excelColumnValidator->getOptions());
+            return $excelColumnValidator->getRelatedValidator();
         }, $excelColumnValidatorAnnotations);
     }
 }

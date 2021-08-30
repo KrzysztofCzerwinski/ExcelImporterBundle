@@ -21,6 +21,9 @@ class ModelExcelImporter extends AbstractExcelImporter
     /** @var string */
     private $importModelClass;
 
+    /** @var string|null */
+    private $displayModelClass = null;
+
     /** @var ModelMetadataFactory */
     private $modelMetadataFactory;
 
@@ -32,6 +35,9 @@ class ModelExcelImporter extends AbstractExcelImporter
 
     /** @var array */
     private $models = [];
+
+    /** @var array */
+    private $displayModels = [];
 
 
     public function __construct
@@ -50,12 +56,18 @@ class ModelExcelImporter extends AbstractExcelImporter
 
     /**
      * @return array Array of models associated with ModelClass
-     *
-     * @warning Array will be empty if import has any errors
      */
     public function getModels(): array
     {
         return $this->models;
+    }
+
+    /**
+     * @return array Array of display ,models associated with the import
+     */
+    public function getDisplayModels(): array
+    {
+        return $this->displayModels;
     }
 
     /**
@@ -77,6 +89,13 @@ class ModelExcelImporter extends AbstractExcelImporter
         return $this;
     }
 
+    public function setDisplayModelClass(?string $displayModelClass): ModelExcelImporter
+    {
+        $this->displayModelClass = $displayModelClass;
+        return $this;
+    }
+
+
     /**
      * @throws UnexpectedExcelCellClassException
      * @throws EmptyExcelColumnException
@@ -87,7 +106,10 @@ class ModelExcelImporter extends AbstractExcelImporter
     {
         $this->assignModelMetadata();
         parent::parseRawExcelRows($rawExcelRows, $firstRowMode);
-        $this->models = $this->modelFactory->createModelsFromExcelRowsAndModelMetadata($this->getImportModelClass(), $this->getExcelRows(), $this->modelMetadata);
+        $this->models = $this->modelFactory->createImportedAssociatedModelsFromExcelRowsAndModelMetadata($this->getImportModelClass(), $this->getExcelRows(), $this->modelMetadata);
+        if (null !== $this->displayModelClass) {
+            $this->displayModels = $this->modelFactory->createDisplayModelsFromExcelRowsAndModelMetadata($this->displayModelClass, $this->getExcelRows(), $this->modelMetadata);
+        }
     }
 
     /**
@@ -108,6 +130,6 @@ class ModelExcelImporter extends AbstractExcelImporter
      */
     private function assignModelMetadata(): void
     {
-        $this->modelMetadata = $this->modelMetadataFactory->createMetadataFromModelClass($this->getImportModelClass());
+        $this->modelMetadata = $this->modelMetadataFactory->createMetadataFromModelClass($this->getImportModelClass(), $this->displayModelClass);
     }
 }

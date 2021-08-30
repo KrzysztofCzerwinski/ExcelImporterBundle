@@ -9,12 +9,12 @@ use Throwable;
 
 class SetterNotCompatibleWithExcelCellValueException extends AnnotationConfigurationException
 {
-    public function __construct(AbstractExcelCell $excelCell, ModelPropertyMetadata $modelPropertyMetadata, Throwable $previous = null)
+    public function __construct(string $modelClass, AbstractExcelCell $excelCell, ModelPropertyMetadata $modelPropertyMetadata, Throwable $previous = null)
     {
         parent::__construct(
             sprintf(
                 "setter '%s::%s' is not compatible with '%s' EXCEL CELL value type. Make sure that no errors in import occurred and proper data type is returned by Excel cell class",
-                $modelPropertyMetadata->getExcelColumn()->getTargetExcelCellClass(),
+                $modelClass,
                 $modelPropertyMetadata->getSetterName(),
                 get_class($excelCell)
             ),
