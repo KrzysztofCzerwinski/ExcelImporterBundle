@@ -14,7 +14,7 @@ use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelFactory;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
-
+use Kczer\ExcelImporterBundle\Model\DisplayModelInterface;
 
 class ModelExcelImporter extends AbstractExcelImporter
 {
@@ -36,7 +36,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     /** @var array */
     private $models = [];
 
-    /** @var array */
+    /** @var DisplayModelInterface[] */
     private $displayModels = [];
 
 
@@ -62,9 +62,6 @@ class ModelExcelImporter extends AbstractExcelImporter
         return $this->models;
     }
 
-    /**
-     * @return array Array of display ,models associated with the import
-     */
     public function getDisplayModels(): array
     {
         return $this->displayModels;
