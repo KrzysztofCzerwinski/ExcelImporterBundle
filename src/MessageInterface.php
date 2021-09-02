@@ -17,5 +17,5 @@ interface MessageInterface
 
     public const REGEX_VALIDATOR_DEFAULT_MESSAGE = 'Wartość nie spełnia wyrażenia regularnego "{pattern}"';
 
-    public const LENGTH_VALIDATOR_DEFAULT_MESSAGE = 'Wartość nie mieści się w przeziale długości od {minLength} do {maxLength}';
+    public const LENGTH_VALIDATOR_DEFAULT_MESSAGE = 'Wartość nie mieści się w przedziale długości od {minLength} do {maxLength}';
 }
