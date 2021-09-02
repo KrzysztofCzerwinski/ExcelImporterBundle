@@ -39,16 +39,17 @@ class ModelMetadataFactory
     /**
      * @throws AnnotationConfigurationException
      * @throws ExcelImportConfigurationException
+     * @throws ReflectionException
      */
     public function createMetadataFromModelClass(string $modelClass, ?string $displayModelClass): ModelMetadata
     {
         $modelReflectionClass = $this->obtainModelReflectionClass($modelClass);
-        $isModelClassDefined = null !== $displayModelClass;
-        $displayModelReflectionClass = $isModelClassDefined ? $this->obtainModelReflectionClass($displayModelClass) : null;
+        $isDisplayModelClassDefined = null !== $displayModelClass;
+        $displayModelReflectionClass = $isDisplayModelClassDefined ? $this->obtainModelReflectionClass($displayModelClass) : null;
 
         $modelPropertiesMetadata = [];
         foreach ($modelReflectionClass->getProperties() as $reflectionProperty) {
-            if ($isModelClassDefined && !$displayModelReflectionClass->hasProperty($reflectionProperty->getName())) {
+            if ($isDisplayModelClassDefined && !$displayModelReflectionClass->hasProperty($reflectionProperty->getName())) {
 
                 throw new MissingModelPropertyException($displayModelReflectionClass->getName(), $reflectionProperty->getName());
             }
@@ -65,8 +66,8 @@ class ModelMetadataFactory
                 ->setValidators($this->getPropertyValidators($reflectionProperty));
 
             $this->validateExcelCellClass($modelPropertyMetadata)->validatePropertySettable($modelReflectionClass, $modelPropertyMetadata);
-            if ($isModelClassDefined) {
-                $this->validateExcelCellClass($modelPropertyMetadata)->validatePropertySettable($displayModelReflectionClass, $modelPropertyMetadata);
+            if ($isDisplayModelClassDefined) {
+                $this->validateExcelCellClass($modelPropertyMetadata)->validatePropertySettable($displayModelReflectionClass, $modelPropertyMetadata)->validateDisplayModelSetterType($displayModelReflectionClass, $modelPropertyMetadata);
             }
             $columnKey = $excelColumn->getColumnKey();
             if (key_exists($columnKey, $modelPropertiesMetadata)) {
@@ -112,7 +113,7 @@ class ModelMetadataFactory
     /**
      * @throws ModelPropertyNotSettableException
      */
-    private function validatePropertySettable(ReflectionClass $modelReflectionClass, ModelPropertyMetadata $modelPropertyMetadata): void
+    private function validatePropertySettable(ReflectionClass $modelReflectionClass, ModelPropertyMetadata $modelPropertyMetadata): self
     {
         try {
             $setterReflection = $modelReflectionClass->getMethod($modelPropertyMetadata->getSetterName());
@@ -124,6 +125,8 @@ class ModelMetadataFactory
 
             throw new ModelPropertyNotSettableException($modelPropertyMetadata, $modelReflectionClass);
         }
+
+        return $this;
     }
 
     /**
@@ -135,10 +138,11 @@ class ModelMetadataFactory
         $setterReflection = $modelReflectionClass->getMethod($displayModelPropertyMetadata->getSetterName());
         $reflectionSetterParameter = current($setterReflection->getParameters());
 
-        $reflectionSetterParameterType = false !== $reflectionSetterParameter ? $reflectionSetterParameter->getType() : 'string';
-        if('string' !== $reflectionSetterParameterType) {
+        $reflectionSetterParameterType = false !== $reflectionSetterParameter ? $reflectionSetterParameter->getType() : null;
+        $reflectionSetterParameterTypeName = null !== $reflectionSetterParameterType ? $reflectionSetterParameterType->getName() : 'string';
+        if('string' !== $reflectionSetterParameterTypeName) {
 
-            throw new InvalidDisplayModelSetterParameterTypeException($modelReflectionClass->getName(), $setterReflection->getName(), $reflectionSetterParameter->getName(), $reflectionSetterParameterType);
+            throw new InvalidDisplayModelSetterParameterTypeException($modelReflectionClass->getName(), $setterReflection->getName(), $reflectionSetterParameter->getName(), $reflectionSetterParameterTypeName);
         }
     }
 
