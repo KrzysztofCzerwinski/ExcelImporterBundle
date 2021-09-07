@@ -111,7 +111,7 @@ abstract class AbstractExcelImporter
 
             throw new JsonExcelRowsLoadException($jsonExcelRows);
         }
-        $this->parseRawExcelRows($rawExcelRows, false);
+        $this->parseRawExcelRows($rawExcelRows, self::FIRST_ROW_MODE_DONT_SKIP);
 
         return $this;
     }
