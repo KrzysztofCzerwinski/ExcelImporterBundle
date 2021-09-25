@@ -3,16 +3,19 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-use Kczer\ExcelImporterBundle\MessageInterface;
 use DateTime;
 use Exception;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * An EXCEL cell that requires value to be string acceptable by DateTime constructor
  */
 class DateTimeExcelCell extends AbstractExcelCell
 {
+    public function __construct(TranslatorInterface $translator)
+    {
+        parent::__construct($translator);
+    }
 
     /**
      * @inheritDoc
@@ -24,6 +27,7 @@ class DateTimeExcelCell extends AbstractExcelCell
         return null !== $this->rawValue ? new DateTime($this->rawValue) : null;
     }
 
+
     /**
      * @inheritDoc
      */
@@ -33,7 +37,7 @@ class DateTimeExcelCell extends AbstractExcelCell
             new DateTime($this->rawValue);
         } catch (Exception $exception) {
 
-            return $this->createErrorMessageWithNamePrefix(MessageInterface::DATETIME_STRING_VALUE_REQUIRED);
+            return $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.datetime_string_value_required');
         }
 
         return null;

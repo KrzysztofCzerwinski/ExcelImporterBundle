@@ -16,14 +16,12 @@ abstract class AbstractValidator
         $this->message = $message;
     }
 
-    public function getMessage(): string
+    /**
+     * @return array{"0": string, "1": array} Array with error message and params passed from validator
+     */
+    public function getMessageWithParams(): array
     {
-        $errorMessage = $this->message;
-        foreach ($this->getReplaceableProperties() as $propertyName => $propertyValue) {
-            $errorMessage = str_replace("{{$propertyName}}" , (string)$propertyValue, $errorMessage);
-        }
-
-        return $errorMessage;
+        return [$this->message, $this->getReplaceablePropertiesAsParams()];
     }
 
     /**
@@ -32,7 +30,7 @@ abstract class AbstractValidator
     public abstract function isExcelCellValueValid(string $rawValue): bool;
 
     /**
-     * @return array Array of properties that can be replaced with {propertyName} syntax in message
+     * @return array Array of properties that will be passed as params array to the translations in format %propertyName% => propertyValue
      */
-    protected abstract function getReplaceableProperties(): array;
+    protected abstract function getReplaceablePropertiesAsParams(): array;
 }

@@ -6,7 +6,6 @@ namespace Kczer\ExcelImporterBundle\Annotation\Validator;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\RegexValidator;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidRegexExpressionException;
-use Kczer\ExcelImporterBundle\MessageInterface;
 use Symfony\Contracts\Service\Attribute\Required;
 
 /**
@@ -27,7 +26,7 @@ class Regex extends AbstractExcelColumnValidator
      */
     public function __construct(array $annotationData)
     {
-        parent::__construct($annotationData + ['message' => MessageInterface::REGEX_VALIDATOR_DEFAULT_MESSAGE]);
+        parent::__construct($annotationData + ['message' => 'excel_importer.validator.messages.regex_validator_default_message']);
 
         $this->pattern = $annotationData['pattern'];
     }

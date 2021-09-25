@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-use Kczer\ExcelImporterBundle\MessageInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use function key_exists;
 
 /**
@@ -14,6 +14,10 @@ abstract class AbstractDictionaryExcelCell extends AbstractExcelCell
     /** @var ?array */
     private $dictionary = null;
 
+    public function __construct(TranslatorInterface $translator)
+    {
+        parent::__construct($translator);
+    }
 
     /**
      * @return array Array with string keys, which will be compared against excel values, and which values will be returned on getValue() call
@@ -40,7 +44,7 @@ abstract class AbstractDictionaryExcelCell extends AbstractExcelCell
 
         if (!key_exists($this->rawValue, $this->dictionary)) {
 
-            return $this->createErrorMessageWithNamePrefix(MessageInterface::DICTIONARY_VALUE_NOT_FOUND);
+            return $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.dictionary_value_not_found');
         }
 
         return null;

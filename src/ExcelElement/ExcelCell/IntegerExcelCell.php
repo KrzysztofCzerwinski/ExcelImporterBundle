@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-use Kczer\ExcelImporterBundle\MessageInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use function ctype_digit;
 
 /**
@@ -11,6 +11,11 @@ use function ctype_digit;
  */
 class IntegerExcelCell extends AbstractExcelCell
 {
+    public function __construct(TranslatorInterface $translator)
+    {
+        parent::__construct($translator);
+    }
+
     /**
      * @inheritDoc
      */
@@ -26,7 +31,7 @@ class IntegerExcelCell extends AbstractExcelCell
     {
         if (!ctype_digit($this->rawValue)) {
 
-            return $this->createErrorMessageWithNamePrefix(MessageInterface::INT_VALUE_REQUIRED);
+            return $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.int_value_required');
         }
 
         return null;

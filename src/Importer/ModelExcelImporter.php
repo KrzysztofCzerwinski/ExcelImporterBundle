@@ -15,6 +15,7 @@ use Kczer\ExcelImporterBundle\Model\Factory\ModelFactory;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 use Kczer\ExcelImporterBundle\Model\DisplayModelInterface;
+use ReflectionException;
 
 class ModelExcelImporter extends AbstractExcelImporter
 {
@@ -98,6 +99,7 @@ class ModelExcelImporter extends AbstractExcelImporter
      * @throws EmptyExcelColumnException
      * @throws AnnotationConfigurationException
      * @throws ExcelImportConfigurationException
+     * @throws ReflectionException
      */
     protected function parseRawExcelRows(array $rawExcelRows, int $firstRowMode): void
     {
@@ -124,6 +126,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     /**
      * @throws ExcelImportConfigurationException
      * @throws AnnotationConfigurationException
+     * @throws ReflectionException
      */
     private function assignModelMetadata(): void
     {

@@ -1,0 +1,10 @@
+excel_importer:
+  validator:
+    messages:
+      value_required: Value required
+      int_value_required: Whole number required
+      numeric_value_required: Numeric value required
+      datetime_string_value_required: Date value required
+      dictionary_value_not_found: Value not found in the dictionary
+      regex_validator_default_message: Value must match the pattern "%pattern%"
+      length_validator_default_message: Value's length must be between %minLength% and %maxLength%'

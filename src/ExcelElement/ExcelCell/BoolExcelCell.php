@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
+use Symfony\Contracts\Translation\TranslatorInterface;
 use function in_array;
 use function strtolower;
 
@@ -11,9 +12,15 @@ use function strtolower;
  */
 class BoolExcelCell extends AbstractExcelCell
 {
-
     /** @var string[] */
     private const SUPPORTED_TRUE_VALUES  = ['y', 'yes', 't', 'tak', 't', 'true'];
+
+
+    public function __construct(TranslatorInterface $translator)
+    {
+        parent::__construct($translator);
+    }
+
 
     /**
      * @inheritDoc

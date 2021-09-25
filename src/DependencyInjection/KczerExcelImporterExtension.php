@@ -6,10 +6,12 @@ namespace Kczer\ExcelImporterBundle\DependencyInjection;
 use Exception;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\Yaml\Yaml;
 
-class KrzczerExcelImporterExtension extends Extension
+class KczerExcelImporterExtension extends Extension implements PrependExtensionInterface
 {
     /**
      * @inheritDoc
@@ -21,5 +23,12 @@ class KrzczerExcelImporterExtension extends Extension
         $configDir = new FileLocator(__DIR__ . '/../../config');
         $loader = new YamlFileLoader($container, $configDir);
         $loader->load('services.yaml');
+    }
+
+    public function prepend(ContainerBuilder $container)
+    {
+        foreach (Yaml::parseFile(__DIR__ . '/../../config/packages/translation.yaml') as $configKey => $configValue) {
+            $container->prependExtensionConfig($configKey, $configValue);
+        }
     }
 }

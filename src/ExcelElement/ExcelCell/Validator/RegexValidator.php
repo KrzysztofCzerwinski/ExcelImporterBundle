@@ -10,14 +10,14 @@ use function trim;
 
 class RegexValidator extends AbstractValidator
 {
-    /**  @var string */
+    /** @var string */
     private $pattern;
 
 
     /**
      * @throws InvalidRegexExpressionException
      */
-    public function __construct(string $pattern, string $message)
+    public function __construct(string $pattern, string $message = 'excel_importer.validator.messages.regex_validator_default_message')
     {
         parent::__construct($message);
 
@@ -33,9 +33,9 @@ class RegexValidator extends AbstractValidator
         return 0 !== preg_match($this->getFullMatchRegex(), $rawValue);
     }
 
-    protected function getReplaceableProperties(): array
+    protected function getReplaceablePropertiesAsParams(): array
     {
-        return ['pattern' => $this->pattern];
+        return ['%pattern%' => $this->pattern];
     }
 
     private function getFullMatchRegex(): string

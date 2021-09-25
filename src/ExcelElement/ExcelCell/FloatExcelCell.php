@@ -2,13 +2,18 @@
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-use Kczer\ExcelImporterBundle\MessageInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * An EXCEL cell that requires value to be a valid number
  */
 class FloatExcelCell extends AbstractExcelCell
 {
+    public function __construct(TranslatorInterface $translator)
+    {
+        parent::__construct($translator);
+    }
+
 
     /**
      * @inheritDoc
@@ -18,6 +23,7 @@ class FloatExcelCell extends AbstractExcelCell
         return null !== $this->rawValue ? (float)$this->rawValue : null;
     }
 
+
     /**
      * @inheritDoc
      */
@@ -25,7 +31,7 @@ class FloatExcelCell extends AbstractExcelCell
     {
         if (!is_numeric($this->rawValue)) {
 
-            return $this->createErrorMessageWithNamePrefix(MessageInterface::NUMERIC_VALUE_REQUIRED);
+            return $this->createErrorMessageWithNamePrefix(excel_importer.validator.messages.numeric_value_required);
         }
 
         return null;

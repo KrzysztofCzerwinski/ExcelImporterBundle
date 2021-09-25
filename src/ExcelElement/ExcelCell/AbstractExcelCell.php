@@ -3,13 +3,15 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
-use Kczer\ExcelImporterBundle\MessageInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use function trim;
 
 abstract class AbstractExcelCell
 {
+    /**  @var TranslatorInterface */
+    protected $translator;
+
     /** @var string|null */
     protected $errorMessage = null;
 
@@ -25,9 +27,14 @@ abstract class AbstractExcelCell
     /** @var AbstractValidator[] */
     private $validators = [];
 
+    public function __construct(TranslatorInterface $translator)
+    {
+        $this->translator = $translator;
+    }
+
     public function getName(): string
     {
-        return $this->name;
+        return $this->translator->trans($this->name);
     }
 
     public function setName(string $name): self
@@ -50,7 +57,7 @@ abstract class AbstractExcelCell
 
     public function getErrorMessage(): ?string
     {
-        return $this->errorMessage;
+        return null !== $this->errorMessage ? $this->translator->trans($this->errorMessage) : null;
     }
 
     public function hasError(): bool
@@ -100,7 +107,6 @@ abstract class AbstractExcelCell
         return !$this->hasError() ? $this->getParsedValue() : null;
     }
 
-
     /**
      * Get value parsed to proper data type
      *
@@ -137,15 +143,16 @@ abstract class AbstractExcelCell
      */
     protected function createErrorMessageWithNamePrefix(string $errorMessage): string
     {
-        return sprintf('%s- %s', $this->name, $errorMessage);
+        return sprintf('%s- %s', $this->getName(), $this->translator->trans($errorMessage));
     }
 
     private function validateValueWithValidators(): ?string
     {
         foreach ($this->validators as $validator) {
             if (!$validator->isExcelCellValueValid($this->rawValue)) {
+                [$message, $params] = $validator->getMessageWithParams();
 
-                return $this->createErrorMessageWithNamePrefix($validator->getMessage());
+                return $this->createErrorMessageWithNamePrefix($this->translator->trans($message, $params));
             }
         }
 
@@ -156,7 +163,7 @@ abstract class AbstractExcelCell
     {
         if (null === $this->rawValue && $this->required) {
 
-            return $this->createErrorMessageWithNamePrefix(MessageInterface::VALUE_REQUIRED);
+            return $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.value_required');
         }
 
         return null;

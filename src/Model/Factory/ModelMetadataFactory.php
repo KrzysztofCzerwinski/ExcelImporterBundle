@@ -152,7 +152,7 @@ class ModelMetadataFactory
     private function getPropertyValidators(ReflectionProperty $reflectionProperty): array
     {
         /** @var AbstractExcelColumnValidator[] $excelColumnValidatorAnnotations */
-        $excelColumnValidatorAnnotations = array_filter($this->annotationReader->getPropertyAnnotations($reflectionProperty), static function ($annotation) {
+        $excelColumnValidatorAnnotations = array_filter($this->annotationReader->getPropertyAnnotations($reflectionProperty), static function ($annotation): bool {
 
             return $annotation instanceof AbstractExcelColumnValidator;
         });
