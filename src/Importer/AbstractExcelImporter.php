@@ -56,10 +56,10 @@ abstract class AbstractExcelImporter
     private $excelRowFactory;
 
     /** @var ExcelCellConfiguration[] */
-    private $excelCellConfigurations;
+    private $excelCellConfigurations = [];
 
     /** @var ExcelRow[] */
-    private $excelRows;
+    private $excelRows = [];
 
 
     public function __construct(
