@@ -21,6 +21,7 @@ use Kczer\ExcelImporterBundle\Model\ModelPropertyMetadata;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use function array_filter;
 use function array_map;
 use function is_a;
@@ -28,11 +29,15 @@ use function key_exists;
 
 class ModelMetadataFactory
 {
+    /** @var TranslatorInterface */
+    private $translator;
+
     /** @var AnnotationReader */
     private $annotationReader;
 
-    public function __construct()
+    public function __construct(TranslatorInterface $translator)
     {
+        $this->translator = $translator;
         $this->annotationReader = new AnnotationReader();
     }
 
@@ -69,7 +74,7 @@ class ModelMetadataFactory
             if ($isDisplayModelClassDefined) {
                 $this->validateExcelCellClass($modelPropertyMetadata)->validatePropertySettable($displayModelReflectionClass, $modelPropertyMetadata)->validateDisplayModelSetterType($displayModelReflectionClass, $modelPropertyMetadata);
             }
-            $columnKey = $excelColumn->getColumnKey();
+            $columnKey = $this->translator->trans($excelColumn->getColumnKey());
             if (key_exists($columnKey, $modelPropertiesMetadata)) {
 
                 throw new DuplicateColumnKeyException($columnKey);

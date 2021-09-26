@@ -29,4 +29,16 @@ class ModelMetadata
 
         return $this;
     }
+
+    /**
+     * @param string[] $keyMappings
+     */
+    public function transformColumnKeyNameKeysToExcelColumnKeys(array $keyMappings): void
+    {
+        foreach ($keyMappings as $columnNameKey => $excelColumnKey) {
+            $this->modelPropertiesMetadata[$excelColumnKey] = $this->modelPropertiesMetadata[$columnNameKey];
+
+            unset($this->modelPropertiesMetadata[$columnNameKey]);
+        }
+    }
 }

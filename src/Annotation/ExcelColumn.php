@@ -34,6 +34,8 @@ class ExcelColumn
     private $targetExcelCellClass;
 
     /**
+     * Excel column key in A-Z notation or human-readable name from Excel header
+     *
      * @Required()
      *
      * @var string

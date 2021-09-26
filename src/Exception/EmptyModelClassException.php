@@ -7,8 +7,8 @@ use Throwable;
 
 class EmptyModelClassException extends ExcelImportConfigurationException
 {
-    public function __construct(string $importerClass, Throwable $previous = null)
+    public function __construct(Throwable $previous = null)
     {
-        parent::__construct(sprintf('EXCEL import class %s has no model assicioated with it', $importerClass), 0, $previous);
+        parent::__construct('EXCEL import class has no model associated with it', 0, $previous);
     }
 }
