@@ -27,6 +27,7 @@ use function array_values;
 use function json_decode;
 use function json_encode;
 use function key;
+use function trim;
 
 abstract class AbstractExcelImporter
 {
@@ -64,8 +65,8 @@ abstract class AbstractExcelImporter
 
     public function __construct(
         TranslatorInterface $translator,
-        ExcelCellFactory $excelCellFactory,
-        ExcelRowFactory $excelRowFactory
+        ExcelCellFactory    $excelCellFactory,
+        ExcelRowFactory     $excelRowFactory
     )
     {
         $this->translator = $translator;
@@ -131,7 +132,9 @@ abstract class AbstractExcelImporter
 
             throw new JsonExcelRowsLoadException($jsonExcelRows);
         }
-        $this->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP);
+        $this
+            ->castRawExcelRowsString()
+            ->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP);
 
         return $this;
     }
@@ -159,7 +162,9 @@ abstract class AbstractExcelImporter
             throw new ExcelFileLoadException($excelFilePath, $exception);
         }
 
-        $this->parseRawExcelRows($firstRowMode);
+        $this
+            ->castRawExcelRowsString()
+            ->parseRawExcelRows($firstRowMode);
 
         return $this;
     }
@@ -200,7 +205,7 @@ abstract class AbstractExcelImporter
                 continue;
             }
 
-            $excelRow = $this->excelRowFactory->createFromExcelCellSkeletonsAndRawCellValues($skeletonExcelCells, $this->parseRawCellValuesString($rawCellValues));
+            $excelRow = $this->excelRowFactory->createFromExcelCellSkeletonsAndRawCellValues($skeletonExcelCells, $rawCellValues);
             if ($isFirstRow && ($firstRowMode & self::FIRST_ROW_MODE_SKIP_IF_INVALID) && $excelRow->hasErrors()) {
 
                 continue;
@@ -236,8 +241,7 @@ abstract class AbstractExcelImporter
     protected function getColumnKeyNameExcelColumnKeyMappings(): ?self
     {
         $columnKeyNames = array_keys($this->getExcelCellConfigurations());
-        $firstRawRowKey = array_key_first($this->rawExcelRows);
-        $firstRawExcelCellValues = array_filter($this->parseRawCellValuesString($this->rawExcelRows[$firstRawRowKey] ?? []));
+        $firstRawExcelCellValues = array_filter($this->rawExcelRows[array_key_first($this->rawExcelRows)] ?? []);
         if (!empty(array_diff($columnKeyNames, $firstRawExcelCellValues))) {
 
             return $this;
@@ -271,14 +275,15 @@ abstract class AbstractExcelImporter
         return $initialExcelCells;
     }
 
-    /**
-     * @param array $rawCellValues
-     *
-     * @return string[]
-     */
-    private function parseRawCellValuesString(array $rawCellValues): array
+    private function castRawExcelRowsString(): self
     {
-        return array_map('strval', $rawCellValues);
+        $this->rawExcelRows = array_map(static function (array $rawCellValues): array {
+            return array_map(static function ($rawCellValue): string {
+                return trim((string)$rawCellValue);
+            }, $rawCellValues);
+        }, $this->rawExcelRows);
+
+        return $this;
     }
 
 

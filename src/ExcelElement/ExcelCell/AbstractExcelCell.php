@@ -9,7 +9,7 @@ use function trim;
 
 abstract class AbstractExcelCell
 {
-    /**  @var TranslatorInterface */
+    /** @var TranslatorInterface */
     protected $translator;
 
     /** @var string|null */
@@ -26,6 +26,9 @@ abstract class AbstractExcelCell
 
     /** @var AbstractValidator[] */
     private $validators = [];
+
+    /** @var bool */
+    protected $validateObligatory = true;
 
     public function __construct(TranslatorInterface $translator)
     {
@@ -127,7 +130,7 @@ abstract class AbstractExcelCell
         $rawValue = trim($rawValue);
         $this->rawValue = '' !== $rawValue ? $rawValue : null;
 
-        $this->setErrorMessage($this->validateValueObligatory());
+        $this->setErrorMessage($this->validateObligatory ? $this->validateValueObligatory() : null);
         if (
             ($this->required && !$this->hasError()) ||
             (!$this->required && null !== $this->rawValue)

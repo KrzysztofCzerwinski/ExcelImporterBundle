@@ -3,8 +3,13 @@ excel_importer:
     messages:
       value_required: Wartość wymagana
       int_value_required: Wymagana liczba całkowita
+      bool_value_required: Wymagana wartośc logiczna
       numeric_value_required: Wymagana wartość liczbowa
       datetime_string_value_required: Wymagana data
       dictionary_value_not_found: Wartość nie znaleziona w słowniku
       regex_validator_default_message: Wartość powinna spełniać wyrażenie regularne "%pattern%"
       length_validator_default_message: Długość wartości powinna być pomiędzy %minLength% a %maxLength%
+  excel_cell:
+    bool:
+      true_display_value: TAK
+      false_display_value: NIE

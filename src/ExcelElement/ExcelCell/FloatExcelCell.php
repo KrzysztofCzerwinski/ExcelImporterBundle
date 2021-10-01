@@ -31,7 +31,7 @@ class FloatExcelCell extends AbstractExcelCell
     {
         if (!is_numeric($this->rawValue)) {
 
-            return $this->createErrorMessageWithNamePrefix(excel_importer.validator.messages.numeric_value_required);
+            return $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.numeric_value_required');
         }
 
         return null;

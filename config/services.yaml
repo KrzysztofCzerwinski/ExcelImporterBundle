@@ -22,12 +22,26 @@ services:
   Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory:
     autowire: true
 
+  Kczer\ExcelImporterBundle\Test\TestDictionaryClass:
+    autowire: true
+    public: true
+    shared: false
+
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\:
     resource: '../src/ExcelElement/ExcelCell/*'
+    exclude: '../src/ExcelElement/BoolExcelCell.php'
     arguments:
       - '@translator'
     shared: false
     public: true
+
+  Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell:
+    public: true
+    arguments:
+      $translator: '@translator'
+      $trueValues: '%excel_cell.bool.true_values%'
+      $falseValues: '%excel_cell.bool.false_values%'
+      $emptyAsFalse: '%excel_cell.bool.empty_as_false%'
 
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractDictionaryExcelCell:
     arguments:

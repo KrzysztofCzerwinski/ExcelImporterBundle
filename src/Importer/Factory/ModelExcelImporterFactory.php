@@ -6,9 +6,9 @@ namespace Kczer\ExcelImporterBundle\Importer\Factory;
 
 use Kczer\ExcelImporterBundle\Exception\UnexpectedDisplayModelClassException;
 use Kczer\ExcelImporterBundle\Importer\ModelExcelImporter;
-use Kczer\ExcelImporterBundle\Model\DisplayModelInterface;
+use Kczer\ExcelImporterBundle\Model\AbstractDisplayModel;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use function is_subclass_of;
+use function is_a;
 
 class ModelExcelImporterFactory
 {
@@ -28,7 +28,7 @@ class ModelExcelImporterFactory
         /** @var ModelExcelImporter $modelExcelImporter*/
         $modelExcelImporter = $this->container->get(ModelExcelImporter::class);
 
-        if (null !== $displayModelClass && !is_subclass_of($displayModelClass, DisplayModelInterface::class, true)) {
+        if (null !== $displayModelClass && !is_a($displayModelClass, AbstractDisplayModel::class, true)) {
 
             throw new UnexpectedDisplayModelClassException($modelClass);
         }

@@ -13,7 +13,7 @@ use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelFactory;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
-use Kczer\ExcelImporterBundle\Model\DisplayModelInterface;
+use Kczer\ExcelImporterBundle\Model\AbstractDisplayModel;
 use ReflectionException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -37,7 +37,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     /** @var array */
     private $models = [];
 
-    /** @var DisplayModelInterface[] */
+    /** @var AbstractDisplayModel[] */
     private $displayModels = [];
 
 
