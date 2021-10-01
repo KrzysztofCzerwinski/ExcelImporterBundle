@@ -17,7 +17,7 @@ class Configuration implements ConfigurationInterface
      */
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('excel_importer');
+        $treeBuilder = new TreeBuilder('kczer_excel_importer');
 
         $treeBuilder->getRootNode()
             ->children()
