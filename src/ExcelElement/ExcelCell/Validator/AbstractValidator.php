@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator;
 
-use function str_replace;
-
 abstract class AbstractValidator
 {
     /** @var string */
@@ -17,12 +15,17 @@ abstract class AbstractValidator
     }
 
     /**
-     * @return array{"0": string, "1": array} Array with error message and params passed from validator
+     * @return array{string, array, ?string} Array with error message, params passed from validator and domain for translation
      */
     public function getMessageWithParams(): array
     {
         return [$this->message, $this->getReplaceablePropertiesAsParams()];
     }
+
+    /**
+     * @return string
+     */
+    public abstract static function getDefaultMessage(): string;
 
     /**
      * @return bool True, if value is valid, false otherwise

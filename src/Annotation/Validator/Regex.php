@@ -26,7 +26,7 @@ class Regex extends AbstractExcelColumnValidator
      */
     public function __construct(array $annotationData)
     {
-        parent::__construct($annotationData + ['message' => 'excel_importer.validator.messages.regex_validator_default_message']);
+        parent::__construct($annotationData + ['message' => RegexValidator::getDefaultMessage()]);
 
         $this->pattern = $annotationData['pattern'];
     }
@@ -38,6 +38,6 @@ class Regex extends AbstractExcelColumnValidator
      */
     public function getRelatedValidator(): AbstractValidator
     {
-        return new RegexValidator($this->pattern, $this->message);
+        return new RegexValidator($this->message, $this->pattern);
     }
 }

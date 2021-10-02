@@ -14,13 +14,20 @@ class LengthValidator extends AbstractValidator
     private $maxLength;
 
 
-    public function __construct(int $maxLength, int $minLength = 0, $message = 'excel_importer.validator.messages.length_validator_default_message')
+    public function __construct(string $message, int $maxLength, int $minLength = 0)
     {
         parent::__construct($message);
 
         $this->minLength = $minLength;
         $this->maxLength = $maxLength;
     }
+
+
+    public static function getDefaultMessage(): string
+    {
+        return 'excel_importer.validator.messages.length_validator_default_message';
+    }
+
 
     public function isExcelCellValueValid(string $rawValue): bool
     {

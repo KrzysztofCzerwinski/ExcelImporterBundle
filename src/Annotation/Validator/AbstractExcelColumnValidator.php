@@ -20,15 +20,11 @@ abstract class AbstractExcelColumnValidator
      */
     protected $message;
 
-    /** @var array */
-    protected $options;
-
     /**
      * @param array{message: string} $annotationData
      */
     public function __construct(array $annotationData)
     {
-        $this->options = $annotationData;
         $this->message = $annotationData['message'];
     }
 
@@ -41,10 +37,4 @@ abstract class AbstractExcelColumnValidator
     {
         return $this->message;
     }
-
-    public function getOptions(): array
-    {
-        return $this->options;
-    }
-
 }

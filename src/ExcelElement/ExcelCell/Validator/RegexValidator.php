@@ -17,7 +17,7 @@ class RegexValidator extends AbstractValidator
     /**
      * @throws InvalidRegexExpressionException
      */
-    public function __construct(string $pattern, string $message = 'excel_importer.validator.messages.regex_validator_default_message')
+    public function __construct(string $message, string $pattern)
     {
         parent::__construct($message);
 
@@ -27,6 +27,13 @@ class RegexValidator extends AbstractValidator
             throw new InvalidRegexExpressionException($this->pattern);
         }
     }
+
+
+    public static function getDefaultMessage(): string
+    {
+        return 'excel_importer.validator.messages.regex_validator_default_message';
+    }
+
 
     public function isExcelCellValueValid(string $rawValue): bool
     {

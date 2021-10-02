@@ -24,9 +24,9 @@ class BoolExcelCell extends AbstractExcelCell
 
     public function __construct(
         TranslatorInterface $translator,
-        array $trueValues,
-        array $falseValues,
-        bool $emptyAsFalse
+        array               $trueValues,
+        array               $falseValues,
+        bool                $emptyAsFalse
     )
     {
         parent::__construct($translator);
@@ -56,7 +56,7 @@ class BoolExcelCell extends AbstractExcelCell
 
     public function getDisplayValue(): string
     {
-        $value =  $this->getParsedValue();
+        $value = $this->getParsedValue();
         if (null !== $value) {
 
             return $this->translator->trans($value ?
@@ -73,7 +73,7 @@ class BoolExcelCell extends AbstractExcelCell
     protected function validateValueRequirements(): ?string
     {
         if (
-            !$this->emptyAsFalse &&
+            null !== $this->rawValue &&
             !in_array($this->getRawValueLowercase(), array_merge($this->trueValues, $this->trueValues))
         ) {
 

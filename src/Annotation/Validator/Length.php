@@ -28,7 +28,7 @@ class Length extends AbstractExcelColumnValidator
      */
     public function __construct(array $annotationData)
     {
-        parent::__construct($annotationData + ['message' => 'excel_importer.validator.messages.length_validator_default_message']);
+        parent::__construct($annotationData + ['message' => LengthValidator::getDefaultMessage()]);
 
         $this->minLength = $annotationData['minLength'] ?? 0;
         $this->maxLength = $annotationData['maxLength'];
@@ -39,6 +39,6 @@ class Length extends AbstractExcelColumnValidator
      */
     public function getRelatedValidator(): AbstractValidator
     {
-        return new LengthValidator($this->maxLength, $this->minLength, $this->message);
+        return new LengthValidator($this->message, $this->maxLength, $this->minLength);
     }
 }

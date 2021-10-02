@@ -29,9 +29,9 @@ services:
 
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\:
     resource: '../../ExcelElement/ExcelCell/*'
-    exclude: '../../ExcelElement/BoolExcelCell.php'
+    exclude: '../../ExcelElement/ExcelCell/{Configuration,Validator,BoolExcelCell.php}'
     arguments:
-      - '@translator'
+      $translator: '@translator'
     shared: false
     public: true
 
@@ -45,7 +45,7 @@ services:
 
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractDictionaryExcelCell:
     arguments:
-      - '@translator'
+      $translator: '@translator'
     shared: false
     abstract: true
     public: true
