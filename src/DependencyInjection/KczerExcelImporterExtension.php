@@ -21,7 +21,7 @@ class KczerExcelImporterExtension extends Extension implements PrependExtensionI
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $configDir = new FileLocator(__DIR__ . '/../../config');
+        $configDir = new FileLocator(__DIR__ . '/../Resources/config');
         $loader = new YamlFileLoader($container, $configDir);
         $loader->load('services.yaml');
 
@@ -35,7 +35,7 @@ class KczerExcelImporterExtension extends Extension implements PrependExtensionI
 
     public function prepend(ContainerBuilder $container)
     {
-        foreach (Yaml::parseFile(__DIR__ . '/../../config/packages/translation.yaml') as $configKey => $configValue) {
+        foreach (Yaml::parseFile(__DIR__ . '/../Resources/config/packages/translation.yaml') as $configKey => $configValue) {
             $container->prependExtensionConfig($configKey, $configValue);
         }
     }

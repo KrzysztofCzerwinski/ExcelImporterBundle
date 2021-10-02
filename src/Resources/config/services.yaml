@@ -28,8 +28,8 @@ services:
     shared: false
 
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\:
-    resource: '../src/ExcelElement/ExcelCell/*'
-    exclude: '../src/ExcelElement/BoolExcelCell.php'
+    resource: '../../ExcelElement/ExcelCell/*'
+    exclude: '../../ExcelElement/BoolExcelCell.php'
     arguments:
       - '@translator'
     shared: false
