@@ -38,6 +38,6 @@ class LengthValidator extends AbstractValidator
 
     protected function getReplaceablePropertiesAsParams(): array
     {
-        return ['%minLength%' => $this->minLength, '%maxLength%' => $this->maxLength];
+        return ['%minLength%' => $this->minLength, '%maxLength%' => $this->maxLength, '%count%' => $this->minLength];
     }
 }

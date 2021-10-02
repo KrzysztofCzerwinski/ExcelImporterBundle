@@ -8,7 +8,7 @@ excel_importer:
       datetime_string_value_required: Wymagana data
       dictionary_value_not_found: Wartość nie znaleziona w słowniku
       regex_validator_default_message: Wartość powinna spełniać wyrażenie regularne "%pattern%"
-      length_validator_default_message: Długość wartości powinna być pomiędzy %minLength% a %maxLength%
+      length_validator_default_message: "{0}Maksymalna dlugość wartości to %maxLength% |]0,Inf] Długość wartości powinna być pomiędzy %minLength% a %maxLength%"
   excel_cell:
     bool:
       true_display_value: TAK
