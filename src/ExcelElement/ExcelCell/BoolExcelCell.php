@@ -74,7 +74,7 @@ class BoolExcelCell extends AbstractExcelCell
     {
         if (
             null !== $this->rawValue &&
-            !in_array($this->getRawValueLowercase(), array_merge($this->trueValues, $this->trueValues))
+            !in_array($this->getRawValueLowercase(), array_merge($this->trueValues, $this->falseValues))
         ) {
 
             return $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.bool_value_required');

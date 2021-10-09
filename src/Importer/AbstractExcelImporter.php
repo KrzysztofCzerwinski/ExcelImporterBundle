@@ -22,11 +22,11 @@ use function array_flip;
 use function array_key_first;
 use function array_keys;
 use function array_map;
+use function array_slice;
 use function array_unshift;
 use function array_values;
 use function json_decode;
 use function json_encode;
-use function key;
 use function trim;
 
 abstract class AbstractExcelImporter
@@ -62,6 +62,8 @@ abstract class AbstractExcelImporter
     /** @var ExcelRow[] */
     private $excelRows = [];
 
+    /** @var int|null */
+    private $headerRowIndex;
 
     public function __construct(
         TranslatorInterface $translator,
@@ -156,7 +158,7 @@ abstract class AbstractExcelImporter
     {
         try {
             $sheet = IOFactory::load($excelFilePath)->getActiveSheet();
-            $this->rawExcelRows = $sheet->toArray('', true, true, true);
+            $this->rawExcelRows = array_values($sheet->toArray('', true, true, true));
         } catch (Throwable $exception) {
 
             throw new ExcelFileLoadException($excelFilePath, $exception);
@@ -190,7 +192,9 @@ abstract class AbstractExcelImporter
     {
         $this
             ->configureExcelCells()
+            ->determineFirstColumnKeyMatchingRowIndex()
             ->getColumnKeyNameExcelColumnKeyMappings()
+            ->filterPreHeaderRows()
             ->filterEmptyExcelRows()
             ->transformExcelCellConfigurationsKeysIfRequired();
 
@@ -199,7 +203,7 @@ abstract class AbstractExcelImporter
         $skeletonExcelCells = $this->createSkeletonExcelCells();
 
         foreach ($this->rawExcelRows as $rowKey => $rawCellValues) {
-            $isFirstRow = key($this->rawExcelRows) === $rowKey;
+            $isFirstRow = array_key_first($this->rawExcelRows) === $rowKey;
             if ($isFirstRow && ($firstRowMode & self::FIRST_ROW_MODE_SKIP)) {
 
                 continue;
@@ -237,16 +241,36 @@ abstract class AbstractExcelImporter
         return $this;
     }
 
-
-    protected function getColumnKeyNameExcelColumnKeyMappings(): ?self
+    private function determineFirstColumnKeyMatchingRowIndex(): self
     {
         $columnKeyNames = array_keys($this->getExcelCellConfigurations());
-        $firstRawExcelCellValues = array_filter($this->rawExcelRows[array_key_first($this->rawExcelRows)] ?? []);
-        if (!empty(array_diff($columnKeyNames, $firstRawExcelCellValues))) {
+        foreach ($this->rawExcelRows as $index => $firstRawExcelCellValues) {
+            if (!empty(array_diff($columnKeyNames, $firstRawExcelCellValues))) {
+
+                continue;
+            }
+            $this->headerRowIndex = $index;
 
             return $this;
         }
-        $this->columnKeyMappings = array_flip(array_intersect($firstRawExcelCellValues, $columnKeyNames));
+
+        return $this;
+    }
+
+    private function getColumnKeyNameExcelColumnKeyMappings(): self
+    {
+        if (null === $this->headerRowIndex) {
+
+            return $this;
+        }
+        $this->columnKeyMappings = array_flip(array_intersect($this->rawExcelRows[$this->headerRowIndex], array_keys($this->getExcelCellConfigurations())));
+
+        return $this;
+    }
+
+    private function filterPreHeaderRows(): self
+    {
+        $this->rawExcelRows = array_slice($this->rawExcelRows, $this->headerRowIndex ?? 0);
 
         return $this;
     }

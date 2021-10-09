@@ -13,7 +13,7 @@ class EmptyExcelColumnException extends Exception
     public function __construct(AbstractExcelCell $excelCell, string $columnKey, Throwable $previous = null)
     {
         parent::__construct(
-            sprintf("Empty column '%s' of key '%s', expected %s compatible values", $excelCell->getName(), $columnKey, get_class($excelCell)),
+            sprintf("Empty column '%s' of key '%s', expected %s compatible values. Make sure there is no misspelling in header column names", $excelCell->getName(), $columnKey, get_class($excelCell)),
             0,
             $previous
         );

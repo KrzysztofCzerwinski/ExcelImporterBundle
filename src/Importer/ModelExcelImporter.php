@@ -136,6 +136,6 @@ class ModelExcelImporter extends AbstractExcelImporter
      */
     private function assignModelMetadata(): void
     {
-        $this->modelMetadata = $this->modelMetadataFactory->createMetadataFromModelClass($this->getImportModelClass(), $this->displayModelClass, $this->columnKeyMappings);
+        $this->modelMetadata = $this->modelMetadataFactory->createMetadataFromModelClass($this->getImportModelClass(), $this->displayModelClass);
     }
 }
