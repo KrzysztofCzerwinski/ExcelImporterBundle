@@ -8,9 +8,9 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    private const DEFAULT_TRUE_VALUES = ['y', 'yes', 't', 'tak', 't', 'true', '1'];
+    private const DEFAULT_TRUE_VALUES = ['tak', 'y', 'yes', 't', 't', 'true', '1'];
 
-    private const DEFAULT_FALSE_VALUES = ['n', 'no', 'nie', 'false', 'f', '0'];
+    private const DEFAULT_FALSE_VALUES = ['nie', 'n', 'no', 'false', 'f', '0'];
 
     /**
      * @inheritDoc

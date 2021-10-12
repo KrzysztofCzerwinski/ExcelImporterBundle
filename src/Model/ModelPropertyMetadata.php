@@ -9,6 +9,15 @@ use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator
 class ModelPropertyMetadata
 {
     /** @var string */
+    public const GETTER_PREFIX = 'get';
+
+    /** @var string */
+    public const BOOL_IS_GETTER_PREFIX = 'is';
+
+    /** @var string */
+    public const BOOL_HAS_GETTER_PREFIX = 'has';
+
+    /** @var string */
     public const SETTER_PREFIX = 'set';
 
     /** @var ExcelColumn */
@@ -45,7 +54,7 @@ class ModelPropertyMetadata
 
     public function getSetterName(): string
     {
-        return sprintf('%s%s', 'set', ucfirst($this->propertyName));
+        return sprintf('%s%s', self::SETTER_PREFIX, ucfirst($this->propertyName));
     }
 
     /**
