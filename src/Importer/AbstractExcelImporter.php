@@ -244,8 +244,8 @@ abstract class AbstractExcelImporter
     private function determineFirstColumnKeyMatchingRowIndex(): self
     {
         $columnKeyNames = array_keys($this->getExcelCellConfigurations());
-        foreach ($this->rawExcelRows as $index => $firstRawExcelCellValues) {
-            if (!empty(array_diff($columnKeyNames, $firstRawExcelCellValues))) {
+        foreach ($this->rawExcelRows as $index => $rawExcelCellValues) {
+            if (!empty(array_diff($columnKeyNames, $rawExcelCellValues))) {
 
                 continue;
             }
@@ -277,7 +277,7 @@ abstract class AbstractExcelImporter
 
     private function transformExcelCellConfigurationsKeysIfRequired(): void
     {
-        foreach ($this->columnKeyMappings as $columnKeyName => $excelColumnKey) {
+        foreach ($this->columnKeyMappings ?? [] as $columnKeyName => $excelColumnKey) {
             $this->excelCellConfigurations[$excelColumnKey] = $this->excelCellConfigurations[$columnKeyName];
 
             unset($this->excelCellConfigurations[$columnKeyName]);
