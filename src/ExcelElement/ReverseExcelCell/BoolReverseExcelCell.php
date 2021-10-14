@@ -6,7 +6,7 @@ namespace Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use function current;
 
-class BoolReverseExcelCell extends AbstractReverseExcelCell
+class BoolReverseExcelCell extends ReverseExcelCell
 {
     /** @var TranslatorInterface */
     private $translator;
@@ -33,7 +33,7 @@ class BoolReverseExcelCell extends AbstractReverseExcelCell
         $this->falseValues = $falseValues;
     }
 
-    public function getReversedExcelCellValue(): string
+    protected function getReversedExcelCellValue(): string
     {
         return current($this->getValue() ? $this->trueValues : $this->falseValues);
     }

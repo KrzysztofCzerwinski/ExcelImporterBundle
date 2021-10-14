@@ -52,6 +52,21 @@ class ModelPropertyMetadata
         return $this;
     }
 
+    public function getGetterName(): string
+    {
+        return sprintf('%s%s', self::GETTER_PREFIX, ucfirst($this->propertyName));
+    }
+
+    public function getBoolIsGetterName(): string
+    {
+        return sprintf('%s%s', self::BOOL_IS_GETTER_PREFIX, ucfirst($this->propertyName));
+    }
+
+    public function getBoolHasGetterName(): string
+    {
+        return sprintf('%s%s', self::BOOL_HAS_GETTER_PREFIX, ucfirst($this->propertyName));
+    }
+
     public function getSetterName(): string
     {
         return sprintf('%s%s', self::SETTER_PREFIX, ucfirst($this->propertyName));

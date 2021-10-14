@@ -5,7 +5,7 @@ namespace Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell;
 
 use function array_search;
 
-class ReverseDictionaryExcelCell extends AbstractReverseExcelCell
+class DictionaryReverseExcelCell extends ReverseExcelCell
 {
     /** @var array */
     private $dictionary;
@@ -15,14 +15,14 @@ class ReverseDictionaryExcelCell extends AbstractReverseExcelCell
         return $this->dictionary;
     }
 
-    public function setDictionary(array $dictionary): ReverseDictionaryExcelCell
+    public function setDictionary(array $dictionary): self
     {
         $this->dictionary = $dictionary;
         return $this;
     }
 
 
-    public function getReversedExcelCellValue(): string
+    protected function getReversedExcelCellValue(): string
     {
         /** @var array $value */
         $value = $this->getValue();

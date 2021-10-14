@@ -22,7 +22,7 @@ abstract class AbstractDictionaryExcelCell extends AbstractExcelCell
     /**
      * @return array Array with string keys, which will be compared against excel values, and which values will be returned on getValue() call
      */
-    protected abstract function getDictionary(): array;
+    public abstract function getDictionary(): array;
 
 
     /**

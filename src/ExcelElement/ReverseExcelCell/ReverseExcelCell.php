@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell;
 
-abstract class AbstractReverseExcelCell
+class ReverseExcelCell
 {
     /** @var mixed */
     private $value;
@@ -25,6 +25,8 @@ abstract class AbstractReverseExcelCell
     public function setValue($value): self
     {
         $this->value = $value;
+        $this->reverseExcelCell();
+
         return $this;
     }
 
@@ -36,24 +38,13 @@ abstract class AbstractReverseExcelCell
         return $this->rawValue;
     }
 
-    /**
-     * @param string $rawValue
-     * @return AbstractReverseExcelCell
-     */
-    public function setRawValue(string $rawValue): AbstractReverseExcelCell
-    {
-        $this->rawValue = $rawValue;
-        return $this;
-    }
-
-
-    public function getReversedExcelCellValue(): string
+    protected function getReversedExcelCellValue(): string
     {
         return (string)$this->getValue();
     }
 
     private function reverseExcelCell(): void
     {
-        $this->rawValue = $this->getReversedExcelCellValue();
+        $this->rawValue = null !== $this->getValue() ? $this->getReversedExcelCellValue() : '';
     }
 }
