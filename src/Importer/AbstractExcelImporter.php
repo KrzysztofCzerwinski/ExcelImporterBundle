@@ -97,6 +97,11 @@ abstract class AbstractExcelImporter
         return $this->excelRows;
     }
 
+    public function getHeaderRowIndex(): ?int
+    {
+        return $this->headerRowIndex;
+    }
+
     /**
      * @return ExcelCellConfiguration[]
      */

@@ -10,10 +10,20 @@ services:
     autowire: true
     public: true
 
+  Kczer\ExcelImporterBundle\Exporter\ModelExcelExporter:
+    autowire: true
+    public: true
+
   Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory:
     autowire: true
 
   Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory:
+    autowire: true
+
+  Kczer\ExcelImporterBundle\ExcelElement\Factory\ReverseExcelCellFactory:
+    autowire: true
+
+  Kczer\ExcelImporterBundle\ExcelElement\Factory\ReverseExcelCellManagerFactory:
     autowire: true
 
   Kczer\ExcelImporterBundle\Model\Factory\ModelFactory:
@@ -49,3 +59,16 @@ services:
     shared: false
     abstract: true
     public: true
+
+  Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\:
+    resource: '../../ExcelElement/ReverseExcelCell/*'
+    exclude: '../../ExcelElement/ReverseExcelCell/{BoolReverseExcelCell.php}'
+    shared: false
+    public: true
+
+  Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\BoolReverseExcelCell:
+    shared: false
+    public: true
+    arguments:
+      $translator: '@translator'
+      $emptyAsFalse: '%excel_cell.bool.empty_as_false%'

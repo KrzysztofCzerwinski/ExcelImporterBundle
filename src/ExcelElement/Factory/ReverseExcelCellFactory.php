@@ -51,6 +51,6 @@ class ReverseExcelCellFactory
             $reverseExcelCell->setDictionary($dictionaryExcelCell->getDictionary());
         }
 
-        return $this->container->get($targetReverseExcelCellClass);
+        return $reverseExcelCell->setBaseExcelCellClass($targetExcelCellClass);
     }
 }

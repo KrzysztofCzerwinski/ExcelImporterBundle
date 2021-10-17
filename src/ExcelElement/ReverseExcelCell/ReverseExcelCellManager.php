@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell;
 
+use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
+use Kczer\ExcelImporterBundle\Exception\Exporter\ReverseExcelCell\ValueNotStringReversableException;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 
 class ReverseExcelCellManager
@@ -32,8 +34,11 @@ class ReverseExcelCellManager
      * @param object $model
      *
      * @return string[]
+     *
+     * @throws NotGettablePropertyException
+     * @throws ValueNotStringReversableException
      */
-    public function reverseModelToArray($model): array
+    public function reverseModelToRawPropertyModels($model): array
     {
         $rawModelData = [];
         foreach ($this->modelMetadata->getModelPropertiesMetadata() as $propertyMetadata) {

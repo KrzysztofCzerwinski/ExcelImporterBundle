@@ -5,8 +5,11 @@ namespace Kczer\ExcelImporterBundle\Model;
 
 use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
+use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
 use ReflectionMethod;
 use ReflectionProperty;
+use function array_filter;
+use function in_array;
 
 class ModelPropertyMetadata
 {
@@ -71,12 +74,22 @@ class ModelPropertyMetadata
         return $this;
     }
 
-    public function getFirstDefinedGetterName(): ?string
+    /**
+     * @throws NotGettablePropertyException
+     */
+    public function getFirstDefinedGetterName(): string
     {
-        $classPublicMethods = $this->reflectionProperty->getDeclaringClass()->getMethods(ReflectionMethod::IS_PUBLIC);
-        $reflectionGetterMethod = $classPublicMethods[$this->getGetterName()] ?? $classPublicMethods[$this->getBoolIsGetterName()] ?? $classPublicMethods[$this->getBoolHasGetterName()] ?? null;
+        $declaringClass = $this->reflectionProperty->getDeclaringClass();
 
-        return null !== $reflectionGetterMethod ? $reflectionGetterMethod->getName() : null;
+        $reflectionGetterMethod = current(array_filter($declaringClass->getMethods(ReflectionMethod::IS_PUBLIC), function (ReflectionMethod $reflectionMethod): bool {
+            return in_array($reflectionMethod->getName(), $this->getAllSupportedGetterNames(), true);
+        }));
+        if (false === $reflectionGetterMethod) {
+
+            throw new NotGettablePropertyException($this, $declaringClass->getName());
+        }
+
+        return $reflectionGetterMethod->getName();
     }
 
     public function getGetterName(): string
@@ -92,6 +105,14 @@ class ModelPropertyMetadata
     public function getBoolHasGetterName(): string
     {
         return sprintf('%s%s', self::BOOL_HAS_GETTER_PREFIX, ucfirst($this->propertyName));
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getAllSupportedGetterNames(): array
+    {
+        return [$this->getGetterName(), $this->getBoolIsGetterName(), $this->getBoolHasGetterName()];
     }
 
     public function getSetterName(): string
