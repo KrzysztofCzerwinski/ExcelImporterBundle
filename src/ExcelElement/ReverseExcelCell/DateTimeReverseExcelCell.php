@@ -21,12 +21,13 @@ class DateTimeReverseExcelCell extends ReverseExcelCell
         return $this;
     }
 
-
-    protected function getReversedExcelCellValue(): string
+    /**
+     * @param DateTime|null $value
+     *
+     * @return string
+     */
+    public function getReversedExcelCellValue($value): string
     {
-        /** @var DateTime $value */
-        $value = $this->getValue();
-
-        return $value->format($this->reversedFormat);
+        return null !== $value ? $value->format($this->reversedFormat) : '';
     }
 }

@@ -66,6 +66,7 @@ class ModelMetadataFactory
                 continue;
             }
             $modelPropertyMetadata = (new ModelPropertyMetadata())
+                ->setReflectionProperty($reflectionProperty)
                 ->setExcelColumn($excelColumn)
                 ->setPropertyName($reflectionProperty->getName())
                 ->setValidators($this->getPropertyValidators($reflectionProperty));

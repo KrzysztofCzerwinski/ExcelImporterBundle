@@ -40,6 +40,8 @@ class ReverseExcelCellFactory
                 continue;
             }
             $targetReverseExcelCellClass = $reverseExcelCellClass;
+
+            break;
         }
         /** @var ReverseExcelCell $reverseExcelCell */
         $reverseExcelCell = $this->container->get($targetReverseExcelCellClass);

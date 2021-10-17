@@ -21,12 +21,13 @@ class DictionaryReverseExcelCell extends ReverseExcelCell
         return $this;
     }
 
-
-    protected function getReversedExcelCellValue(): string
+    /**
+     * @param mixed $value
+     *
+     * @return string
+     */
+    public function getReversedExcelCellValue($value): string
     {
-        /** @var array $value */
-        $value = $this->getValue();
-
-        return (string)array_search($value, $this->getDictionary());
+        return null !== $value ? (string)array_search($value, $this->getDictionary()) : '';
     }
 }

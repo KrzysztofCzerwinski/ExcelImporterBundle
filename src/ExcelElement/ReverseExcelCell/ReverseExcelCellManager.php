@@ -13,23 +13,16 @@ class ReverseExcelCellManager
     /** @var array<string, ReverseExcelCell> Keys are property names */
     private $propertyReverseExcelCells;
 
-    public function getModelMetadata(): ModelMetadata
-    {
-        return $this->modelMetadata;
-    }
-
-    public function setModelMetadata(ModelMetadata $modelMetadata): ReverseExcelCellManager
+    public function setModelMetadata(ModelMetadata $modelMetadata): self
     {
         $this->modelMetadata = $modelMetadata;
         return $this;
     }
 
-    public function getPropertyReverseExcelCells(): array
-    {
-        return $this->propertyReverseExcelCells;
-    }
-
-    public function setPropertyReverseExcelCells(array $propertyReverseExcelCells): ReverseExcelCellManager
+    /**
+     * @param array<string, ReverseExcelCell> $propertyReverseExcelCells Keys are property names
+     */
+    public function setPropertyReverseExcelCells(array $propertyReverseExcelCells): self
     {
         $this->propertyReverseExcelCells = $propertyReverseExcelCells;
         return $this;
@@ -40,11 +33,13 @@ class ReverseExcelCellManager
      *
      * @return string[]
      */
-    private function reverseModelToArray($model): array
+    public function reverseModelToArray($model): array
     {
         $rawModelData = [];
-        foreach ($this->getModelMetadata()->getModelPropertiesMetadata() as $propertyMetadata) {
-            $rawModelData[$propertyMetadata->getExcelColumn()->getColumnKey()] = $this->getPropertyReverseExcelCells()[$propertyMetadata->getPropertyName()]->getRawValue();
+        foreach ($this->modelMetadata->getModelPropertiesMetadata() as $propertyMetadata) {
+            $propertyGetterName = $propertyMetadata->getFirstDefinedGetterName();
+            $rawModelData[$propertyMetadata->getExcelColumn()->getColumnKey()] =
+                $this->propertyReverseExcelCells[$propertyMetadata->getPropertyName()]->getReversedExcelCellValue($model->{$propertyGetterName}());
         }
 
         return $rawModelData;

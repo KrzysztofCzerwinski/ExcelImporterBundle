@@ -5,6 +5,8 @@ namespace Kczer\ExcelImporterBundle\Model;
 
 use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
+use ReflectionMethod;
+use ReflectionProperty;
 
 class ModelPropertyMetadata
 {
@@ -20,6 +22,9 @@ class ModelPropertyMetadata
     /** @var string */
     public const SETTER_PREFIX = 'set';
 
+    /** @var ReflectionProperty */
+    private $reflectionProperty;
+
     /** @var ExcelColumn */
     private $excelColumn;
 
@@ -29,13 +34,27 @@ class ModelPropertyMetadata
     /** @var AbstractValidator[] */
     private $validators;
 
+    /**
+     * @return ReflectionProperty
+     */
+    public function getReflectionProperty(): ReflectionProperty
+    {
+        return $this->reflectionProperty;
+    }
+
+    public function setReflectionProperty(ReflectionProperty $reflectionProperty): self
+    {
+        $this->reflectionProperty = $reflectionProperty;
+        return $this;
+    }
+
 
     public function getExcelColumn(): ExcelColumn
     {
         return $this->excelColumn;
     }
 
-    public function setExcelColumn(ExcelColumn $excelColumn): ModelPropertyMetadata
+    public function setExcelColumn(ExcelColumn $excelColumn): self
     {
         $this->excelColumn = $excelColumn;
         return $this;
@@ -46,10 +65,18 @@ class ModelPropertyMetadata
         return $this->propertyName;
     }
 
-    public function setPropertyName(string $propertyName): ModelPropertyMetadata
+    public function setPropertyName(string $propertyName): self
     {
         $this->propertyName = $propertyName;
         return $this;
+    }
+
+    public function getFirstDefinedGetterName(): ?string
+    {
+        $classPublicMethods = $this->reflectionProperty->getDeclaringClass()->getMethods(ReflectionMethod::IS_PUBLIC);
+        $reflectionGetterMethod = $classPublicMethods[$this->getGetterName()] ?? $classPublicMethods[$this->getBoolIsGetterName()] ?? $classPublicMethods[$this->getBoolHasGetterName()] ?? null;
+
+        return null !== $reflectionGetterMethod ? $reflectionGetterMethod->getName() : null;
     }
 
     public function getGetterName(): string

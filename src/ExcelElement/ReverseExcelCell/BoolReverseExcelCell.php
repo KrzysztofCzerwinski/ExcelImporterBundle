@@ -11,30 +11,36 @@ class BoolReverseExcelCell extends ReverseExcelCell
     /** @var TranslatorInterface */
     private $translator;
 
-    /** @var string[] */
-    private $trueValues;
+    /** @var bool */
+   private $emptyAsFalse;
 
-    /** @var string[] */
-    private $falseValues;
-
-    /**
-     * @param TranslatorInterface $translator
-     * @param string[] $trueValues
-     * @param string[] $falseValues
-     */
     public function __construct(
         TranslatorInterface $translator,
-        array $trueValues,
-        array $falseValues
+        bool $emptyAsFalse
     )
     {
         $this->translator = $translator;
-        $this->trueValues = $trueValues;
-        $this->falseValues = $falseValues;
+        $this->emptyAsFalse = $emptyAsFalse;
     }
 
-    protected function getReversedExcelCellValue(): string
+    /**
+     * @param bool|null $value
+     *
+     * @return string
+     */
+    public function getReversedExcelCellValue($value): string
     {
-        return current($this->getValue() ? $this->trueValues : $this->falseValues);
+        if ($this->emptyAsFalse) {
+
+            return $this->translator->trans(true === $value ?
+                'excel_importer.excel_cell.bool.true_display_value' :
+                'excel_importer.excel_cell.bool.false_display_value'
+            );
+        }
+
+        return null !== $value ? $this->translator->trans($value ?
+            'excel_importer.excel_cell.bool.true_display_value' :
+            'excel_importer.excel_cell.bool.false_display_value'
+        ) : '';
     }
 }
