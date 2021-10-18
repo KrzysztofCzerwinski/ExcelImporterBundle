@@ -22,6 +22,10 @@ use function array_map;
 use function array_unshift;
 use function current;
 use function get_class;
+use function key;
+use function reset;
+use function sys_get_temp_dir;
+use function tempnam;
 
 class ModelExcelExporter
 {
@@ -57,12 +61,16 @@ class ModelExcelExporter
 
     /**
      * @param object[] $models
+     * @param bool $outputHeaders
+     *
+     * @return string
      *
      * @throws AnnotationConfigurationException
      * @throws ExcelImportConfigurationException
      * @throws ReflectionException
+     * @throws Writer\Exception
      */
-    public function exportModels(array $models, bool $outputHeaders = true, string $outputFileName = 'model_export'): void
+    public function exportModels(array $models, bool $outputHeaders = true): string
     {
         $this->models = $models;
         $this
@@ -76,7 +84,7 @@ class ModelExcelExporter
             $this->unshiftHeaderToRawModelsData();
         }
 
-        dd($this->rawModelsData);
+        return $this->exportRawModelsDataToNewFile($outputHeaders);
     }
 
     /**
@@ -139,19 +147,17 @@ class ModelExcelExporter
         return $this;
     }
 
-    private function transformModelMetadataPropertyKeysIfRequired(): self
+    private function transformModelMetadataPropertyKeysIfRequired(): void
     {
         if (null === $this->columnKeyMappings) {
 
-            return $this;
+            return;
         }
 
         $this->modelMetadata->transformColumnKeyNameKeysToExcelColumnKeys($this->columnKeyMappings);
-
-        return $this;
     }
 
-    private function unshiftHeaderToRawModelsData(): self
+    private function unshiftHeaderToRawModelsData(): void
     {
         $headerData = [];
         foreach ($this->modelMetadata->getModelPropertiesMetadata() as $columnKey => $modelPropertyMetadata) {
@@ -159,24 +165,31 @@ class ModelExcelExporter
             $headerData[$columnKey] = null !== $this->columnKeyMappings ? $excelColumn->getColumnKey() : $excelColumn->getCellName();
         }
         array_unshift($this->rawModelsData, $headerData);
-
-        return $this;
     }
 
     /**
      * @throws Writer\Exception
      */
-    private function exportRawModelsDataToNewFile(array $rawModelsData, bool $outputHeaders): void
+    private function exportRawModelsDataToNewFile(bool $outputHeaders): string
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
-        foreach ($rawModelsData as $index => $rawModelData) {
+        reset($this->rawModelsData);
+        foreach ($this->rawModelsData as $index => $rawModelData) {
+            if (!$outputHeaders && key($this->rawModelsData) === $index) {
+
+                continue;
+            }
             foreach ($rawModelData as $columnKey => $rawModelPropertyValue) {
                 $excelIndex = $index + 1;
                 $sheet->setCellValue("{$columnKey}{$excelIndex}", $rawModelPropertyValue);
             }
         }
-        IOFactory::createWriter($spreadsheet, 'Xlsx')->save('');
+
+        $newFilePath = tempnam(sys_get_temp_dir(), 'tmp');
+        IOFactory::createWriter($spreadsheet, 'Xlsx')->save($newFilePath);
+
+        return $newFilePath;
     }
 }

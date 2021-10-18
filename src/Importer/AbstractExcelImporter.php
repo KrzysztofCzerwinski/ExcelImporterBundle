@@ -19,7 +19,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
 use function array_filter;
 use function array_flip;
-use function array_key_first;
 use function array_keys;
 use function array_map;
 use function array_slice;
@@ -27,6 +26,8 @@ use function array_unshift;
 use function array_values;
 use function json_decode;
 use function json_encode;
+use function key;
+use function reset;
 use function trim;
 
 abstract class AbstractExcelImporter
@@ -207,8 +208,9 @@ abstract class AbstractExcelImporter
 
         $skeletonExcelCells = $this->createSkeletonExcelCells();
 
+        reset($this->rawExcelRows);
         foreach ($this->rawExcelRows as $rowKey => $rawCellValues) {
-            $isFirstRow = array_key_first($this->rawExcelRows) === $rowKey;
+            $isFirstRow = key($this->rawExcelRows) === $rowKey;
             if ($isFirstRow && ($firstRowMode & self::FIRST_ROW_MODE_SKIP)) {
 
                 continue;
