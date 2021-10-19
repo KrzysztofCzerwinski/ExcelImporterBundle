@@ -7,8 +7,11 @@ use Kczer\ExcelImporterBundle\ExcelElement\Factory\ReverseExcelCellManagerFactor
 use Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\ReverseExcelCellManager;
 use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
 use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
+use Kczer\ExcelImporterBundle\Exception\TemporaryFileManager\FileAlreadyExistsException;
+use Kczer\ExcelImporterBundle\Exception\TemporaryFileManager\TemporaryFileCreationException;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
+use Kczer\ExcelImporterBundle\Util\TemporaryFileManager;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -23,12 +26,18 @@ use function array_unshift;
 use function current;
 use function get_class;
 use function key;
+use function preg_match;
 use function reset;
+use function strpos;
 use function sys_get_temp_dir;
 use function tempnam;
+use function ucfirst;
+use function uniqid;
 
 class ModelExcelExporter
 {
+    public const EXCEL_FILE_EXTENSION = 'xlsx';
+
     /** @var ModelMetadataFactory */
     private $modelMetadataFactory;
 
@@ -41,6 +50,9 @@ class ModelExcelExporter
     /** @var ReverseExcelCellManager|null */
     private $reverseExcelCellManager;
 
+    /** @var TemporaryFileManager */
+    private $temporaryFileManager;
+
     /** @var array<string, string>|null */
     private $columnKeyMappings;
 
@@ -52,25 +64,30 @@ class ModelExcelExporter
 
     public function __construct(
         ModelMetadataFactory $modelMetadataFactory,
-        ReverseExcelCellManagerFactory $reverseExcelCellManagerFactory
+        ReverseExcelCellManagerFactory $reverseExcelCellManagerFactory,
+        TemporaryFileManager $temporaryFileManager
     )
     {
         $this->modelMetadataFactory = $modelMetadataFactory;
         $this->reverseExcelCellManagerFactory = $reverseExcelCellManagerFactory;
+        $this->temporaryFileManager = $temporaryFileManager;
     }
 
     /**
-     * @param object[] $models
-     * @param bool $outputHeaders
+     * @param object[] $models Models to export
+     * @param string|null $fileNameWithoutExtension Generate EXCEL file name without extension. random name if null provided
+     * @param bool $outputHeaders Whether to add header columns
      *
-     * @return string
+     * @return string Newly created EXCEL file full name
      *
      * @throws AnnotationConfigurationException
      * @throws ExcelImportConfigurationException
+     * @throws FileAlreadyExistsException
      * @throws ReflectionException
+     * @throws TemporaryFileCreationException
      * @throws Writer\Exception
      */
-    public function exportModels(array $models, bool $outputHeaders = true): string
+    public function exportModels(array $models, string $fileNameWithoutExtension = null, bool $outputHeaders = true): string
     {
         $this->models = $models;
         $this
@@ -84,7 +101,7 @@ class ModelExcelExporter
             $this->unshiftHeaderToRawModelsData();
         }
 
-        return $this->exportRawModelsDataToNewFile($outputHeaders);
+        return $this->exportRawModelsDataToNewFile($outputHeaders, $fileNameWithoutExtension);
     }
 
     /**
@@ -169,9 +186,13 @@ class ModelExcelExporter
 
     /**
      * @throws Writer\Exception
+     * @throws FileAlreadyExistsException
+     * @throws TemporaryFileCreationException
      */
-    private function exportRawModelsDataToNewFile(bool $outputHeaders): string
+    private function exportRawModelsDataToNewFile(bool $outputHeaders, ?string $fileNameWithoutExtension): string
     {
+        $fileName = $this->createFileNameWithExcelExtension($fileNameWithoutExtension);
+
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -187,9 +208,18 @@ class ModelExcelExporter
             }
         }
 
-        $newFilePath = tempnam(sys_get_temp_dir(), 'tmp');
-        IOFactory::createWriter($spreadsheet, 'Xlsx')->save($newFilePath);
+        $newFilePath = $this->temporaryFileManager->createTmpFileWithName($fileName);
+        IOFactory::createWriter($spreadsheet, ucfirst(self::EXCEL_FILE_EXTENSION))->save($newFilePath);
 
         return $newFilePath;
+    }
+
+    private function createFileNameWithExcelExtension(?string $fileName): string
+    {
+        return sprintf(
+            '%s.%s',
+            null === $fileName ? uniqid('excel_importer_', true) : $fileName,
+            self::EXCEL_FILE_EXTENSION
+        );
     }
 }

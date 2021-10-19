@@ -72,3 +72,6 @@ services:
     arguments:
       $translator: '@translator'
       $emptyAsFalse: '%excel_cell.bool.empty_as_false%'
+
+  Kczer\ExcelImporterBundle\Util\TemporaryFileManager:
+    shared: false
