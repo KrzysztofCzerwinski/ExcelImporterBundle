@@ -106,4 +106,9 @@ class ExcelColumn extends AbstractOptionsAnnotation
     {
         return $this->options;
     }
+
+    public function getReverseReverseDateTimeFormat(): ?string
+    {
+        return $this->getOptions()['reverseDateTimeFormat'] ?? null;
+    }
 }

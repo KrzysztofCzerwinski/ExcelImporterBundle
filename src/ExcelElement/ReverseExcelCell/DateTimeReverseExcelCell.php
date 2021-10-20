@@ -8,16 +8,12 @@ use DateTime;
 class DateTimeReverseExcelCell extends ReverseExcelCell
 {
     /** @var string */
-    private $reversedFormat = 'Y-m-d';
+    private $reversedFormat;
 
-    public function getReversedFormat(): string
-    {
-        return $this->reversedFormat;
-    }
-
-    public function setReversedFormat(string $reversedFormat): self
+    public function setReversedFormat(?string $reversedFormat): self
     {
         $this->reversedFormat = $reversedFormat;
+
         return $this;
     }
 
@@ -28,6 +24,6 @@ class DateTimeReverseExcelCell extends ReverseExcelCell
      */
     public function getReversedExcelCellValue($value): string
     {
-        return null !== $value ? $value->format($this->reversedFormat) : '';
+        return null !== $value ? $value->format($this->reversedFormat ?? 'd.m.Y') : '';
     }
 }

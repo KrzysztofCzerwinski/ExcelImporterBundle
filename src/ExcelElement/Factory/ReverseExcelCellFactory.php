@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\Factory;
 
+use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractDictionaryExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\DateTimeExcelCell;
@@ -31,7 +32,7 @@ class ReverseExcelCellFactory
         $this->container = $container;
     }
 
-    public function resolveFromExcelCellClass(string $targetExcelCellClass): ReverseExcelCell
+    public function resolveFromExcelCellClassAndExcelColumn(string $targetExcelCellClass, ExcelColumn $excelColumn): ReverseExcelCell
     {
         $targetReverseExcelCellClass = ReverseExcelCell::class;
         foreach (self::REVERSE_EXCEL_CELL_EXCEL_CELL_MAPPINGS as $reverseExcelCellClass => $excelCellClass) {
@@ -49,6 +50,8 @@ class ReverseExcelCellFactory
             /** @var AbstractDictionaryExcelCell $dictionaryExcelCell */
             $dictionaryExcelCell = $this->container->get($targetExcelCellClass);
             $reverseExcelCell->setDictionary($dictionaryExcelCell->getDictionary());
+        } elseif ($reverseExcelCell instanceof DateTimeReverseExcelCell) {
+            $reverseExcelCell->setReversedFormat($excelColumn->getReverseReverseDateTimeFormat());
         }
 
         return $reverseExcelCell->setBaseExcelCellClass($targetExcelCellClass);
