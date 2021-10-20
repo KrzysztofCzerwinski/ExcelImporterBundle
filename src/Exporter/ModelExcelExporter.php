@@ -26,13 +26,8 @@ use function array_unshift;
 use function current;
 use function get_class;
 use function key;
-use function preg_match;
 use function reset;
-use function strpos;
-use function sys_get_temp_dir;
-use function tempnam;
 use function ucfirst;
-use function uniqid;
 
 class ModelExcelExporter
 {
@@ -133,9 +128,11 @@ class ModelExcelExporter
     private function prepareColumnKeyMappings(): self
     {
         $rawModelsDataKeys = array_keys($this->modelMetadata->getModelPropertiesMetadata());
-        if (empty(array_filter($rawModelsDataKeys, static function (string $columnKey): bool {
-            return mb_strtoupper($columnKey) !== $columnKey;
-        }))) {
+        if (
+            empty(array_filter($rawModelsDataKeys, static function (string $columnKey): bool {
+                return mb_strtoupper($columnKey) !== $columnKey;
+            }))
+        ) {
 
             return $this;
         }
@@ -191,8 +188,6 @@ class ModelExcelExporter
      */
     private function exportRawModelsDataToNewFile(bool $outputHeaders, ?string $fileNameWithoutExtension): string
     {
-        $fileName = $this->createFileNameWithExcelExtension($fileNameWithoutExtension);
-
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -208,18 +203,9 @@ class ModelExcelExporter
             }
         }
 
-        $newFilePath = $this->temporaryFileManager->createTmpFileWithName($fileName);
+        $newFilePath = $this->temporaryFileManager->createTmpFileWithNameAndExtension($fileNameWithoutExtension, self::EXCEL_FILE_EXTENSION);
         IOFactory::createWriter($spreadsheet, ucfirst(self::EXCEL_FILE_EXTENSION))->save($newFilePath);
 
         return $newFilePath;
-    }
-
-    private function createFileNameWithExcelExtension(?string $fileName): string
-    {
-        return sprintf(
-            '%s.%s',
-            null === $fileName ? uniqid('excel_importer_', true) : $fileName,
-            self::EXCEL_FILE_EXTENSION
-        );
     }
 }

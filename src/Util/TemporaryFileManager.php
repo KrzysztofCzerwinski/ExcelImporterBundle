@@ -8,7 +8,9 @@ use Kczer\ExcelImporterBundle\Exception\TemporaryFileManager\TemporaryFileCreati
 use function fclose;
 use function file_exists;
 use function fopen;
+use function sprintf;
 use function sys_get_temp_dir;
+use function uniqid;
 
 class TemporaryFileManager
 {
@@ -43,5 +45,25 @@ class TemporaryFileManager
         fclose($fileResource);
 
         return $this->tmpFilePath;
+    }
+
+    /**
+     * @param string|null $filenameWithoutExtension Random name provided in case of null
+     * @param string $extension
+     *
+     * @return string
+     *
+     * @throws FileAlreadyExistsException
+     * @throws TemporaryFileCreationException
+     */
+    public function createTmpFileWithNameAndExtension(?string $filenameWithoutExtension, string $extension): string
+    {
+        $fileName = sprintf(
+            '%s.%s',
+            null === $filenameWithoutExtension ? uniqid('excel_importer_', true) : $filenameWithoutExtension,
+            $extension
+        );
+
+        return $this->createTmpFileWithName($fileName);
     }
 }

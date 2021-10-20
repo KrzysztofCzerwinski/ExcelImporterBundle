@@ -7,13 +7,16 @@ use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\Target;
 use Doctrine\Common\Annotations\Annotation\Required;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidAnnotationParamException;
+use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedAnnotationOptionException;
+use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionExpectedDataTypeException;
+use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionValueDataTypeException;
 use function is_bool;
 
 /**
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class ExcelColumn
+class ExcelColumn extends AbstractOptionsAnnotation
 {
     /**
      * Column name
@@ -51,23 +54,32 @@ class ExcelColumn
 
 
     /**
-     * @param array{cellName: string, targetExcelCellClass: string, required: bool, columnKey: string} $annotationData
+     * @param array{cellName: string, targetExcelCellClass: string, required: bool, columnKey: string, options: array} $annotationData
      *
      * @throws InvalidAnnotationParamException
+     * @throws UnexpectedAnnotationOptionException
+     * @throws UnexpectedOptionValueDataTypeException
+     * @throws UnexpectedOptionExpectedDataTypeException
      */
     public function __construct(array $annotationData)
     {
-        $this->targetExcelCellClass = $annotationData['targetExcelCellClass'];
-
-        $this->columnKey = $annotationData['columnKey'];
-        $this->cellName = $annotationData['cellName'] ?? '';
-
+        parent::__construct($annotationData);
         $required = $annotationData['required'] ?? true;
         if (!is_bool($required)) {
 
-           throw new InvalidAnnotationParamException('required', static::class, $required, 'bool');
+            throw new InvalidAnnotationParamException('required', static::class, $required, 'bool');
         }
-        $this->required = $annotationData['required'] ?? true;
+        $this->targetExcelCellClass = $annotationData['targetExcelCellClass'];
+        $this->columnKey = $annotationData['columnKey'];
+        $this->cellName = $annotationData['cellName'] ?? '';
+        $this->required = $required;
+    }
+
+    protected function getSupportedOptions(): array
+    {
+        return [
+            'reverseDateTimeFormat' => 'string',
+        ];
     }
 
     public function getCellName(): string
@@ -90,4 +102,8 @@ class ExcelColumn
         return $this->required;
     }
 
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
 }
