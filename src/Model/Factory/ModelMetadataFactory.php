@@ -84,7 +84,9 @@ class ModelMetadataFactory
             $modelPropertiesMetadata[$columnKey] = $modelPropertyMetadata;
         }
 
-        return (new ModelMetadata())->setModelPropertiesMetadata($modelPropertiesMetadata);
+        return (new ModelMetadata())
+            ->setModelClassName($modelReflectionClass->getName())
+            ->setModelPropertiesMetadata($modelPropertiesMetadata);
     }
 
     /**

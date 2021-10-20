@@ -7,10 +7,12 @@ services:
     public: true
 
   Kczer\ExcelImporterBundle\Importer\ModelExcelImporter:
+    shared: false
     autowire: true
     public: true
 
   Kczer\ExcelImporterBundle\Exporter\ModelExcelExporter:
+    shared: false
     autowire: true
     public: true
 

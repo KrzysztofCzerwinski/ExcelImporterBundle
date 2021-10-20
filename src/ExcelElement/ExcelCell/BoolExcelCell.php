@@ -73,6 +73,7 @@ class BoolExcelCell extends AbstractExcelCell
     protected function validateValueRequirements(): ?string
     {
         if (
+            !$this->emptyAsFalse &&
             null !== $this->rawValue &&
             !in_array($this->getRawValueLowercase(), array_merge($this->trueValues, $this->falseValues))
         ) {

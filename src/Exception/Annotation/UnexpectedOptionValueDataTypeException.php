@@ -11,14 +11,8 @@ use function is_object;
 
 class UnexpectedOptionValueDataTypeException extends Exception
 {
-    /**
-     * @param string $optionName
-     * @param array $expectedOptionType
-     * @param mixed $givenValue
-     * @param string $annotationClass
-     * @param Throwable|null $previous
-     */
-    public function __construct(string $optionName, array $expectedOptionType, $givenValue, string $annotationClass, Throwable $previous = null)
+
+    public function __construct(string $optionName, string $expectedOptionType, $givenValue, string $annotationClass, Throwable $previous = null)
     {
         parent::__construct(sprintf(
             'Unexpected data type of option "%s" in annotation class "%s". Expected "%s", got "%s"',

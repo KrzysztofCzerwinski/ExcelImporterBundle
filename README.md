@@ -102,7 +102,7 @@ namespace App\Service;
 
 use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
-use Kczer\ExcelImporterBundle\Exception\ExcelFileLoadException;
+use Kczer\ExcelImporterBundle\Exception\FileLoadException;
 use Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory;
 use Kczer\ExcelImporterBundle\Importer\ModelExcelImporter;
 
@@ -118,7 +118,7 @@ class ImportService
     /**
      * @throws UnexpectedExcelCellClassException
      * @throws EmptyExcelColumnException
-     * @throws ExcelFileLoadException
+     * @throws FileLoadException
      */
     public function someMethod(string $filePath): void
     {

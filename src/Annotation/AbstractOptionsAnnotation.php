@@ -9,6 +9,7 @@ use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedAnnotationOptionExc
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionExpectedDataTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionValueDataTypeException;
 use function array_diff;
+use function array_diff_key;
 use function array_keys;
 use function current;
 use function is_array;
@@ -69,14 +70,14 @@ abstract class AbstractOptionsAnnotation
      */
     private function validateOptionsNames(array $options): self
     {
-        $supportedOptions = array_keys($this->getSupportedOptions());
-        $unknownOptions = array_diff($options, $supportedOptions);
+        $supportedOptions = $this->getSupportedOptions();
+        $unknownOptions = array_diff_key($options, $supportedOptions);
         if (empty($unknownOptions)) {
 
             return $this;
         }
 
-        throw new UnexpectedAnnotationOptionException(current($unknownOptions), $supportedOptions, static::class);
+        throw new UnexpectedAnnotationOptionException(key($unknownOptions), $supportedOptions, static::class);
     }
 
     /**
@@ -89,7 +90,7 @@ abstract class AbstractOptionsAnnotation
         /**
          * @var array<string, array{mixed, string}> $optionsTypeData
          */
-        $optionsTypeData = array_merge_recursive($options, $supportedOptions);
+        $optionsTypeData = !empty($options) ? array_merge_recursive($options, $supportedOptions) : [];
         $unsupportedExpectedTypes = array_diff($supportedOptions, self::SUPPORTED_OPTION_EXPECTED_DATA_TYPES);
         if (!empty($unsupportedExpectedTypes)) {
 

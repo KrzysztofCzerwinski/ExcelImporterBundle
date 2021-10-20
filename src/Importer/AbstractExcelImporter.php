@@ -1,4 +1,6 @@
 <?php
+/** @noinspection PhpUnused */
+
 declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Importer;
@@ -11,9 +13,11 @@ use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
-use Kczer\ExcelImporterBundle\Exception\ExcelFileLoadException;
+use Kczer\ExcelImporterBundle\Exception\FileLoadException;
 use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\JsonExcelRowsLoadException;
+use Kczer\ExcelImporterBundle\Model\ExcelRowsMetadata;
+use Kczer\ExcelImporterBundle\Model\Factory\ExcelRowsMetadataFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Throwable;
@@ -21,9 +25,11 @@ use function array_filter;
 use function array_flip;
 use function array_keys;
 use function array_map;
+use function array_search;
 use function array_slice;
 use function array_unshift;
 use function array_values;
+use function implode;
 use function json_decode;
 use function json_encode;
 use function key;
@@ -66,6 +72,9 @@ abstract class AbstractExcelImporter
     /** @var int|null */
     private $headerRowIndex;
 
+    /** @var ExcelRowsMetadata */
+    private $excelRowsMetadata;
+
     public function __construct(
         TranslatorInterface $translator,
         ExcelCellFactory    $excelCellFactory,
@@ -98,9 +107,9 @@ abstract class AbstractExcelImporter
         return $this->excelRows;
     }
 
-    public function getHeaderRowIndex(): ?int
+    public function getExcelRowsMetadata(): ExcelRowsMetadata
     {
-        return $this->headerRowIndex;
+        return $this->excelRowsMetadata;
     }
 
     /**
@@ -125,6 +134,23 @@ abstract class AbstractExcelImporter
             array_map(static function (ExcelRow $excelCell): bool {
                 return $excelCell->hasErrors();
             }, $this->excelRows)
+        );
+    }
+
+    /**
+     * @param string $separator
+     *
+     * @return string Error messages from all ExcelRows with value attached to each message
+     */
+    public function getMergedAllErrorMessages(string $separator = ', '): string
+    {
+        return implode(
+            $separator,
+            array_filter(
+                array_map(static function (ExcelRow $excelRow): string {
+                    return $excelRow->getMergedAllErrorMessages(true);
+                }, $this->excelRows)
+            )
         );
     }
 
@@ -156,7 +182,7 @@ abstract class AbstractExcelImporter
      *
      * @return $this
      *
-     * @throws ExcelFileLoadException
+     * @throws FileLoadException
      * @throws EmptyExcelColumnException
      * @throws UnexpectedExcelCellClassException
      */
@@ -164,10 +190,10 @@ abstract class AbstractExcelImporter
     {
         try {
             $sheet = IOFactory::load($excelFilePath)->getActiveSheet();
-            $this->rawExcelRows = array_values($sheet->toArray('', true, true, true));
+            $this->rawExcelRows = $sheet->toArray('', true, true, true);
         } catch (Throwable $exception) {
 
-            throw new ExcelFileLoadException($excelFilePath, $exception);
+            throw new FileLoadException($excelFilePath, $exception);
         }
 
         $this
@@ -201,13 +227,14 @@ abstract class AbstractExcelImporter
             ->determineFirstColumnKeyMatchingRowIndex()
             ->getColumnKeyNameExcelColumnKeyMappings()
             ->filterPreHeaderRows()
-            ->filterEmptyExcelRows()
-            ->transformExcelCellConfigurationsKeysIfRequired();
+            ->transformExcelCellConfigurationsKeysIfRequired()
+            ->filterEmptyExcelRows();
 
         $firstRowMode = null !== $this->columnKeyMappings ? self::FIRST_ROW_MODE_SKIP : $firstRowMode;
 
         $skeletonExcelCells = $this->createSkeletonExcelCells();
 
+        $skippedFirstRow = true;
         reset($this->rawExcelRows);
         foreach ($this->rawExcelRows as $rowKey => $rawCellValues) {
             $isFirstRow = key($this->rawExcelRows) === $rowKey;
@@ -221,12 +248,16 @@ abstract class AbstractExcelImporter
 
                 continue;
             }
+            $skippedFirstRow = !$isFirstRow && $skippedFirstRow;
 
             $this->excelRows[] = $excelRow;
         }
         if (null !== $this->rowRequirementsValidator) {
             ($this->rowRequirementsValidator)($this->excelRows);
         }
+        $this->prepareExcelRowsMetadata($skippedFirstRow);
+
+        $this->rawExcelRows = array_values($this->rawExcelRows);
         $this->excelRows = array_values($this->excelRows);
     }
 
@@ -277,18 +308,26 @@ abstract class AbstractExcelImporter
 
     private function filterPreHeaderRows(): self
     {
-        $this->rawExcelRows = array_slice($this->rawExcelRows, $this->headerRowIndex ?? 0);
+        $headerRowOffset = array_search($this->headerRowIndex, array_keys($this->rawExcelRows));
+        $this->rawExcelRows = array_slice($this->rawExcelRows, $headerRowOffset ?: 0, null, true);
 
         return $this;
     }
 
-    private function transformExcelCellConfigurationsKeysIfRequired(): void
+    private function transformExcelCellConfigurationsKeysIfRequired(): self
     {
         foreach ($this->columnKeyMappings ?? [] as $columnKeyName => $excelColumnKey) {
             $this->excelCellConfigurations[$excelColumnKey] = $this->excelCellConfigurations[$columnKeyName];
 
             unset($this->excelCellConfigurations[$columnKeyName]);
         }
+
+        return $this;
+    }
+
+    private function prepareExcelRowsMetadata(bool $skippedFirstRow): void
+    {
+        $this->excelRowsMetadata = ExcelRowsMetadataFactory::createFromExcelImporterData($this->rawExcelRows, $this->headerRowIndex, $this->columnKeyMappings, $skippedFirstRow);
     }
 
     /**
@@ -317,16 +356,11 @@ abstract class AbstractExcelImporter
         return $this;
     }
 
-
-    private function filterEmptyExcelRows(): self
+    private function filterEmptyExcelRows(): void
     {
-        $this->rawExcelRows = array_values(
-            array_filter($this->rawExcelRows, static function (array $excelRow): bool {
-                return !empty(array_filter($excelRow));
-            })
-        );
-
-        return $this;
+        $this->rawExcelRows = array_filter($this->rawExcelRows, function (array $excelRow): bool {
+            return !empty(array_filter(array_intersect_key($excelRow, $this->excelCellConfigurations)));
+        });
     }
 
 }

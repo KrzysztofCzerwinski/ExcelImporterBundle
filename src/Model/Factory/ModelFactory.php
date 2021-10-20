@@ -18,13 +18,13 @@ class ModelFactory
      * @param ExcelRow[] $excelRows
      * @param ModelMetadata $modelMetadata
      *
-     * @return array Array of models associated with ModelImport class
+     * @return object[] Array of models associated with ModelImport class
      *
      * @throws SetterNotCompatibleWithExcelCellValueException
      */
     public function createImportedAssociatedModelsFromExcelRowsAndModelMetadata(string $modelClass, array $excelRows, ModelMetadata $modelMetadata): array
     {
-        return $this->createModelsFromExcelRowsAndModelMetadata($modelClass, $excelRows, $modelMetadata, false);
+        return $this->createModelsFromExcelRowsAndModelMetadata($modelClass, $excelRows, $modelMetadata);
     }
 
     /**

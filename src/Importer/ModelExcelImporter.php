@@ -34,7 +34,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     /** @var ModelMetadata */
     private $modelMetadata;
 
-    /** @var array */
+    /** @var object[] */
     private $models = [];
 
     /** @var AbstractDisplayModel[] */
@@ -57,7 +57,7 @@ class ModelExcelImporter extends AbstractExcelImporter
 
 
     /**
-     * @return array Array of models associated with ModelClass
+     * @return object[] Array of models associated with ModelClass
      */
     public function getModels(): array
     {

@@ -3,10 +3,13 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Util;
 
+use Kczer\ExcelImporterBundle\Exception\FileLoadException;
 use Kczer\ExcelImporterBundle\Exception\TemporaryFileManager\FileAlreadyExistsException;
 use Kczer\ExcelImporterBundle\Exception\TemporaryFileManager\TemporaryFileCreationException;
 use function fclose;
 use function file_exists;
+use function file_get_contents;
+use function file_put_contents;
 use function fopen;
 use function sprintf;
 use function sys_get_temp_dir;
@@ -65,5 +68,22 @@ class TemporaryFileManager
         );
 
         return $this->createTmpFileWithName($fileName);
+    }
+
+    /**
+     * @throws FileAlreadyExistsException
+     * @throws TemporaryFileCreationException
+     * @throws FileLoadException
+     */
+    public function createTmpFileWithExtensionFromExistingFile(?string $filenameWithoutExtension, string $extension, string $fileToCopyFullPath): string
+    {
+        if (!file_exists($fileToCopyFullPath)) {
+
+            throw new FileLoadException($fileToCopyFullPath);
+        }
+        $fileName = $this->createTmpFileWithNameAndExtension($filenameWithoutExtension, $extension);
+        file_put_contents($fileName, file_get_contents($fileToCopyFullPath));
+
+        return $fileName;
     }
 }
