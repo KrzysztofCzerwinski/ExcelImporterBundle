@@ -5,7 +5,7 @@ namespace Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell;
 
 use DateTime;
 
-class DateTimeReverseExcelCell extends AbstractReverseExcelCell
+class DateTimeReverseExcelCell extends ReverseExcelCell
 {
     /** @var string */
     private $reversedFormat = 'Y-m-d';
@@ -15,18 +15,19 @@ class DateTimeReverseExcelCell extends AbstractReverseExcelCell
         return $this->reversedFormat;
     }
 
-    public function setReversedFormat(string $reversedFormat): DateTimeReverseExcelCell
+    public function setReversedFormat(string $reversedFormat): self
     {
         $this->reversedFormat = $reversedFormat;
         return $this;
     }
 
-
-    public function getReversedExcelCellValue(): string
+    /**
+     * @param DateTime|null $value
+     *
+     * @return string
+     */
+    public function getReversedExcelCellValue($value): string
     {
-        /** @var DateTime $value */
-        $value = $this->getValue();
-
-        return $value->format($this->reversedFormat);
+        return null !== $value ? $value->format($this->reversedFormat) : '';
     }
 }
