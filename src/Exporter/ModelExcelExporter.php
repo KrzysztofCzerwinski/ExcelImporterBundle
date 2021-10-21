@@ -37,6 +37,7 @@ use function current;
 use function get_class;
 use function is_callable;
 use function key;
+use function range;
 use function reset;
 use function ucfirst;
 
