@@ -1,17 +1,23 @@
-### Table of contents:
-- [Excel-importer](#excel-importer)
-    * [Installation](#installation)
-    * [Documentation](#documentation)
-        + [Mapping EXCEL data to objects](#sample-import)
-        + [Predefined ExcelCell classes](#predefined-excelcell-classes)
-        + [DictionaryExcelCell](#dictionaryexcelcell)
-        + [Custom ExcelCellClasses](#custom-excelcellclasses)
-        + [More complex imports](#more-complex-imports)
-        + [Data encoding](#data-encoding)
+### Table of contents
+
+- [ExcelImporterBundle](#excelimporterbundle)
+  * [Installation](#installation)
+  * [Documentation](#documentation)
+    + [Sample import model- @ExcelColumn annotation:](#sample-import-model---excelcolumn-annotation-)
+    + [Sample import - model (Technical keys):](#sample-import---model--technical-keys--)
+    + [Sample import - model (Named column keys):](#sample-import---model--named-column-keys--)
+    + [Sample import - display model](#sample-import---display-model)
+    + [Sample import](#sample-import)
+    + [Sample import - complex validation](#sample-import---complex-validation)
+    + [Sample import- useful methods](#sample-import--useful-methods)
+    + [Sample import- annotation validation](#sample-import--annotation-validation)
+    + [Sample export](#sample-export)
+    + [AbstractDictionaryExcelCell](#abstractdictionaryexcelcell)
+    + [Yaml configuration](#yaml-configuration)
 
 # ExcelImporterBundle
 
-Excel-importer is a PHP library that enables to easy import EXCEL formats data and event parse it to objects.
+ExcelImportedBundle enables PHP objects import from EXCEL files as well as export of the same objects.
 
 ## Installation
 You can install it with composer like so:
@@ -23,37 +29,184 @@ composer require kczer/excel-importer-bundle
 
 ## Documentation
 
-### Sample Import:
+### Sample import model- @ExcelColumn annotation:
+
+First, we need to create model that will represent EXCEL file content. Here we use **@ExcelColumn** annotation with following options:
+
+- **columnKey** (Supports translate keys): can be Technical EXCEL column name (in A-ZZZ... notation) or **Named column name** (recommended) that will be value in EXCEL file.
+For named column names to work we need to have one row that matches all column names.
+Named and technical column keys must not be mixed.
+
+- **cellName** (Supports translate keys): Name that is used for displaying error messages and also can be used for displaying straight from ExcelRow instance. 
+- **targetExcelCellClass**: Excel cell klas that will be used to parse excel value to property. Several of them are available out of the box:
+
+  | Syntax                      | Description                                                                                                                                              | Returned | Default validation                                                                                                                                  | Configuration                                                                                                                                              |
+  |-----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+  | StringExcelCell             | Basic type for handling simple string                                                                                                                    | string   | None                                                                                                                                                | none                                                                                                                                                       |
+  | IntegerExcelCell            | Type for handling integer values                                                                                                                         | int      | EXCEL value needs to be valid int                                                                                                                   | none                                                                                                                                                       |
+  | FloatExcelCell              | Type for handling float values                                                                                                                           | float    | EXCEL value needs to be number                                                                                                                      | none                                                                                                                                                       |
+  | BoolExcelCell               | Type for handling bool values                                                                                                                            | bool     | Value needs to be one of ['tak', 'y', 'yes', 't', 't', 'true', '1'] for true, or ['nie', 'n', 'no', 'false', 'f', '0'] for false (case insensitive) | true and false values are configurable, as well as option to treat empty values as false  (more info in [yaml configuration](#yaml-configuration) section) |
+  | DateTimeExcelCell           | Type for handling dates or dates with time                                                                                                               | DateTime | Value needs to be acceptable by DateTime class constructor                                                                                          | none                                                                                                                                                       |
+  | AbstractDictionaryExcelCell | Type for handling EXCEL values that can be only in specified range (each dictionary excel cell needs to be created by extending AbstractExcelCell class) | mixed    | Value needs to be a key from dictionary (more info in [AbstractDictionaryExcelCell](#abstractdictionaryexcelcell) section)                          | none                                                                                                                                                       |
+
+- **required**: Whether the value is required in the EXCEL file (default to true)
+- **options**: additional options specific for EXCEL cell. Supported options:
+
+  | EXCEL cell class  | option                | description                                      |
+  |-------------------|-----------------------|--------------------------------------------------|
+  | DateTimeExcelCell | reverseDateTimeFormat | Format used for EXCEL export of related property |
+
+### Sample import - model (Technical keys):
+
+Sample model for EXCEL file would look like this:
 
 ```php
 <?php
 //TestModel.php
 
+use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\StringExcelCell;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\IntegerExcelCell;
+
 class TestModel
 {
     /**
-     * @ExcelColumn(columnKey="A", cellName="user", targetExcelCellClass=TestDictionaryExcelCell::class)
+     * @ExcelColumn(columnKey="A", cellName="id", targetExcelCellClass=IntegerExcelCell::class)
      *
-     * @var User
+     * @var int
      */
-    private $user;
+    private $id;
 
     /**
-     * @ExcelColumn(columnKey="B", cellName="name", targetExcelCellClass=StringExcelCell::class)
+     * @ExcelColumn(columnKey="B", cellName="name", targetExcelCellClass=StringExcelCell::class, required=false)
      *
-     * @var string
+     * @var string|null
      */
     private $name;
 
-
-    public function getUser(): User
+     // Model class MUST have public getters and setters for mapped properties
+     // to let importer prepare the model
+    public function getId(): int
     {
-        return $this->user;
+        return $this->id;
     }
 
-    public function setUser(User $user): TestModel
+    public function setId(int $id): self
     {
-        $this->user = $user;
+        $this->id = $id;
+        
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
+        
+        return $this;
+    }
+}
+```
+
+Following EXCEL file would match this model:
+
+![technical_column_keys_simple_model_excel_content.png](image/technical_column_keys_simple_model_excel_content.png)
+
+### Sample import - model (Named column keys):
+
+The same model as above using named column keys would look like so:
+
+```php
+<?php
+//TestModel.php
+
+use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\StringExcelCell;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\IntegerExcelCell;
+
+class TestModel
+{
+    // column key can be also a translation key
+    /**
+     * @ExcelColumn(columnKey="id", cellName="id", targetExcelCellClass=IntegerExcelCell::class)
+     *
+     * @var int
+     */
+    private $id;
+
+    /**
+     * @ExcelColumn(columnKey="name", cellName="name", targetExcelCellClass=StringExcelCell::class, required=false)
+     *
+     * @var string|null
+     */
+    private $name;
+
+     // Model class MUST have public getters and setters for mapped properties
+     // to let importer prepare the model
+    public function getId(): int
+    {
+        return $this->id;
+    }
+
+    public function setId(int $id): self
+    {
+        $this->id = $id;
+        
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
+        
+        return $this;
+    }
+}
+```
+
+### Sample import - display model
+
+Sometimes we would like to display some of imported content or see validation messages generated by importer. 
+It can be achieved by creating display model class that extends **AbstractDisplayModel** class.
+Display model classes must have the same property names as model one (for all mapped fields) and have them declared as strings.
+Display model class for above model would look like so:
+
+```php
+<?php
+//TestModel.php
+
+use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\StringExcelCell;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\IntegerExcelCell;
+use \Kczer\ExcelImporterBundle\Model\AbstractDisplayModel;
+
+class TestDisplayModel extends AbstractDisplayModel
+{
+    /** @var string */
+    private $id;
+
+    /** @var string */
+    private $name;
+
+
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = $id;
+        
         return $this;
     }
 
@@ -65,132 +218,291 @@ class TestModel
     public function setName(string $name): self
     {
         $this->name = $name;
+        
         return $this;
     }
 }
 ```
 
+Thanks to extending **AbstractDisplayModel** class we have access to two methods:
+- isValid: Returns true or false depending on model validity  
+- getMergedAllErrorMessages: Returns string containing concatenated error messages from all properties of model
+
+### Sample import 
+
+Model defined above can be imported via importing **ModelExcelImporterFactory** and creating **ModelExcelImporter** instance 
+
 ```php
 <?php
-declare(strict_types=1);
-//TestDictionaryExcelCell.php
+//TestService.php
 
-class TestDictionaryExcelCell extends AbstractDictionaryExcelCell
+use \Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory;
+
+class TestService
 {
-    /** @var UserRepository */
-    private $userRepository;
-
-    public function __construct(UserRepository $userRepository)
+    /** @var ModelExcelImporterFactory */
+    private $modelExcelImporterFactory;
+    
+    public function __construct(ModelExcelImporterFactory $modelExcelImporterFactory)
     {
-        $this->userRepository = $userRepository;
+        $this->modelExcelImporterFactory = $modelExcelImporterFactory
     }
-
+    
     /**
-     * @throws QueryException
-     */
-    protected function getDictionary(): array
+    * @return TestModel[]
+    */
+    public function getImportedModels(string $excelFilePath): array
     {
-        return $this->userRepository->findAllIndexedById();
+        $importer = $this->modelExcelImporterFactory->createModelExcelImporter(TestModel::class, TestDisplayModel::class); //Display model class can be null if not needed
+        $importer->parseExcelFile($excelFilePath);
+        
+        return $importer->getModels(); //$importer->getDisplayModels() for display models
     }
 }
 ```
 
+Method **parseExcelFile** takes up two arguments:
+- excelFilePath: full path to EXCEL file
+- firstRowMode (optional, works only with technical column keys): Tells what importer should do with first data row. Available options:
+  - AbstractExcelImporter::FIRST_ROW_MODE_SKIP(default): skip first data row
+  - AbstractExcelImporter::FIRST_ROW_MODE_DONT_SKIP: do not skip first data row
+  - AbstractExcelImporter::FIRST_ROW_MODE_SKIP_IF_INVALID: skip first data row only if it is not valid against model
+
+### Sample import - complex validation
+
+Sometimes it is required to perform some more complex validation, for example validation between columns, when one cell should be dependent on others.
+Let's say that we want every name cell to end with corresponding id.
+It is achievable by calling **setRowRequirementsValidator**:
+
 ```php
 <?php
-//ImportService.php
-namespace App\Service;
+//TestService.php
 
-use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
-use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
-use Kczer\ExcelImporterBundle\Exception\FileLoadException;
-use Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory;
-use Kczer\ExcelImporterBundle\Importer\ModelExcelImporter;
+use \Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory;
+use \Kczer\ExcelImporterBundle\ExcelElement\ExcelRow;
+use function substr;
+use function strlen;
 
-class ImportService
+class TestService
+{
+    /** @var ModelExcelImporterFactory */
+    private $modelExcelImporterFactory;
+    
+    public function __construct(ModelExcelImporterFactory $modelExcelImporterFactory)
+    {
+        $this->modelExcelImporterFactory = $modelExcelImporterFactory
+    }
+    
+    /**
+    * @return TestModel[]
+    */
+    public function getImportedModels(string $excelFilePath): array
+    {
+        $importer = $this->modelExcelImporterFactory->createModelExcelImporter(TestModel::class, TestDisplayModel::class); //Display model class can be null if not needed
+        $importer->setRowRequirementsValidator([$this, 'validateRowRequirements']);//Or with standard anonymous function syntax
+        $importer->parseExcelFile($excelFilePath);
+        
+        return $importer->getModels();
+    }
+    
+    public function validateRowRequirements(ExcelRow $excelRow): void
+    {
+        $excelCells = $excelRow->getExcelCells(); // Array of ExcelCell objects, keys are column keys (technical or named: named in example)
+        $idString = (string)$excelCells['id']->getValue(); // Already parsed value; $excelCells['id']->getRawValue() for string|null
+        if ($idString !== substr($excelCells['name']->getValue(), -1 * strlen($idString))) {
+            $excelRow->addErrorMessage('Name should end with the corresponding id'); // Supports translation keys
+        }
+    }
+}
+```
+
+### Sample import- useful methods
+
+Here are some useful methods from importer:
+
+```php
+<?php
+//TestService.php
+
+use \Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory;
+use \Kczer\ExcelImporterBundle\Importer\ModelExcelImporter;
+
+class TestService
 {
     /** @var ModelExcelImporter */
     private $modelExcelImporter;
-
-    public function __construct(ModelExcelImporterFactory $modelExcelImporterFactory) {
-        $this->modelExcelImporter = $modelExcelImporterFactory->createModelExcelImporter(TestModel::class);
-    }
-
-    /**
-     * @throws UnexpectedExcelCellClassException
-     * @throws EmptyExcelColumnException
-     * @throws FileLoadException
-     */
-    public function someMethod(string $filePath): void
-    {
-        $this->modelExcelImporter->parseExcelFile($filePath);
-    }
+    
+    //.
+    //.
+    //.
+   
+   public function foo(): void
+   {
+        $this->modelExcelImporter->getExcelRowsAsJson(); // Get imported as JSON
+        $this->modelExcelImporter->parseJson(); // Import JSON back to models
+        $this->modelExcelImporter->hasErrors(); // Are there any validation errors in EXCEL file?
+   }
 }
 ```
 
-### Predefined ExcelCell classes:
+### Sample import- annotation validation
 
-- **StringExcelCell** - Simple string values with no validation of data. getValue() returns string.
-- **IntegerExcelCell** - Accepts only valid ints. getValue() returns int.
-- **FloatExcelCell** - Accepts only valid numbers. getValue() return float.
-- **BoolExcelCell** - Accepts 'y', 'yes', 't', 'tak', 't', 'true' (case insensitive) as true. Other values are considered false. getValue() returns bool.
-- **DateTimeExcelCell** - Accepts all strings acceptable by DateTime class constructor. getValue() returns DataTime object
-- **AbstractDictionaryExcelCell** - Abstract class useful for key-value types example below
-- **AbstractMultipleDictionaryExcelCell** - Abstract class that can merge a couple of AbstractDictionaryCell dictionaries into one
+Bundle comes with two built-in validation available from model level:
+- **@Validator\Regex**: Validates excel cell value against regex expression (regex is case insensitive)
+- **@Validator\Length**: Validates excel cell length
 
-### Mapping EXCEL data to objects
-In previous example import resulted in array of ExcelRow objects, but if we wanted map out EXCEL data to some model object?
-Let's assume that we have some PHP object named SomeModel. We can import it by extending **Kczer\ExcelImporter\AbstractModelExcelImporter**:
+Each validator has _message_ property, that specifies error message when validation fails.
+These messages support translations and each validator passes specific translation parameters. Supported translation parameters
+- **@Validator\Regex**:
+  - %pattern%: pattern passed in annotation
+- **@Validator\Length**: 
+  - %minLength%: minimum length passed in annotation
+  - %maxLength%: maximum length passed in annotation 
+
+If we for example wanted name field to always end with id, and to be at most 10 characters long, we can type:
 
 ```php
 <?php
+//TestModel.php
 
-namespace My\SampleNamespace;
+use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\StringExcelCell;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\IntegerExcelCell;
+use Kczer\ExcelImporterBundle\Annotation\Validator;
 
-use Kczer\ExcelImporterBundle\AbstractModelExcelImporter;
-
-class SomeModelImporter extends AbstractModelExcelImporter
+class TestModel
 {
+     // .
+     // .
+     // .
+     
+    /**
+     * @ExcelColumn(columnKey="name", cellName="name", targetExcelCellClass=StringExcelCell::class, required=false)
+     * @Validator\Regex(pattern="[a-z]+\d+", message="Name must end with the id") In case of error adds message "Name must end with the id" to cell errors
+     * @Validator\Length(maxLength=10) In case of error adds message "Value's max length is 10" to cell errors
+     * 
+     * @var string|null
+     */
+    private $name;
+
+     // .
+     // .
+     // .
+}
+```
+
+```php
+<?php
+//TestModel.php
+
+use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\StringExcelCell;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\IntegerExcelCell;
+
+class TestModel
+{
+    // column key can be also a translation key
+    /**
+     * @ExcelColumn(columnKey="id", cellName="id", targetExcelCellClass=IntegerExcelCell::class)
+     *
+     * @var int
+     */
+    private $id;
 
     /**
-     * @inheritDoc
+     * @ExcelColumn(columnKey="name", cellName="name", targetExcelCellClass=StringExcelCell::class, required=false)
+     *
+     * @var string|null
      */
-    public function processParsedData(): void
+    private $name;
+
+     // Model class MUST have public getters and setters for mapped properties
+     // to let importer prepare the model
+    public function getId(): int
     {
-        // Gets array of SomeModel objects
-        // Note that models are created ONLY if $this->hasErrors() return false
-        $this->getModels(); 
+        return $this->id;
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function getImportModelClass(): string
+    public function setId(int $id): self
     {
-        return SomeModel::class;// Our model class 
+        $this->id = $id;
+        
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
+        
+        return $this;
     }
 }
 ```
 
-It's almost ready. To make it work we need to do one more step of setup.
-In our SomeModel class:
+### Sample export
 
-### DictionaryExcelCell
+Having our model we can not only import it from EXCEL file, but also export it and merge to existing EXCEL FILES.
 
-Dictionary EXCEL cells are used to define "range" of values, that cell can have.
-It's perfect when cell value can be for example id of some resource from database.
-Sample DictionaryExcelCell class:
+```php
+<?php
+//TestExportService.php
+
+use Kczer\ExcelImporterBundle\Exporter\ModelExcelExporter;
+
+class TestExportService
+{
+    /** @var ModelExcelExporter */
+    private $modelExcelExporter;
+    
+    //.
+    //.
+    //.
+   
+   /**
+    * @param TestModel[] $models
+    */
+   public function exportModels(array $testModels, string $existingExcelFilePath): void
+   {
+        $newExcelFileTmpPath = $this->modelExcelExporter->exportModelsToNewFile($testModels); //Returns path to newly created TMP file
+        $newMergedExcelFileTmpPath = $this->modelExcelExporter->exportAndMergeModelsToExistingFile($testModels, $existingExcelFilePath)
+   }
+}
+```
+
+There are two export methods:
+- **exportModelsToNewFile**: Create new EXCEL file and output models to it. Method takes up to three arguments
+  - models: Models to export
+  - newFileNameWithoutExtension: Generated EXCEL file name without extension. random name if null provided
+  - outputHeaders: Whether to add header columns
+- **exportAndMergeModelsToExistingFile**: Create new EXCEL file and output models to it. Method takes up to three arguments
+  - models: Same as above
+  - newFileNameWithoutExtension: Same as above
+  - comparer: Can be either model property name to compare or anonymous function taking two models as arguments that returns bool if 
+two models are equal. If two models are equal, the EXCEL one will be replaced with imported one
+  - firstRowMode: first row mode passed to importer when getting data from EXCEL (works only with technical column keys)
+
+### AbstractDictionaryExcelCell
+
+Dictionary EXCEL cells are used to define "range" of values, that cell can take.
+It's use when cell value must match some column value from database
+Sample DictionaryClass class:
 
 ```php
 <?php
 
 class SampleDictionaryExcelCell extends AbstractDictionaryExcelCell
 {
-    /** @var MyRepository */
-    private $myRepository;
+    /** @var TestRepository */
+    private $testRepository;
     
-    public function __construct(MyRepository $myRepository)
+    public function __construct(TestRepository $testRepository)
     {
-        $this->myRepository = $myRepository;
+        $this->myRepository = $testRepository;
     }
 
     /**
@@ -198,166 +510,26 @@ class SampleDictionaryExcelCell extends AbstractDictionaryExcelCell
      */
     protected function getDictionary(): array
     {
-       return $myRepository->findIndexedBySomeUniqeCode();
+       return $this->testRepository->findIndexedBySomeUniqeCode(); // array in format ['some code expected in excel' => $valueInExcel, ...]
     }
 }
 ```
 
-Now, we could just add this class to Import configuration of to **ExcelColumn** annotation, and excel-importer will accept only values from range 1-4 and getValue will return User objects.
+### Yaml configuration
 
-### Custom ExcelCellClasses
+Example below shows all available configuration options, that can be paced in _config/packages/kczer_excel_importer.yaml_ file:
 
-If You want more flexible or more validation in ExcelCell class, You can simply extend **AbstractExcelCellClass** and create custom validations and return data types.
-Int the example we will create cell that needs to be a valid email:
-
-```php
-<?php
-
-namespace My\SampleNamespace;
-
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
-
-class RegexValidatableExcelCell extends AbstractExcelCell
-{
-
-    /**
-     * returned value will be returned by the getValue() method
-     * Note, that getValue() will return this value only if cell doesn't contain any error
-     */
-    protected function getParsedValue(): ?string
-    {
-        // In this case, we don't want to do any parsing as string is proper data type for email address
-        return $this->rawValue;
-    }
-
-    /**
-     * Method should return null if value is valid,
-     * or string with error message if not
-     */
-    protected function validateValueRequirements(): ?string
-    {
-        // We can access the raw string value with $this->rawValue
-        // Note that the raw value will be null in case of empty cell
-        if (filter_var($this->rawValue, FILTER_VALIDATE_EMAIL) === false) {
-            
-            // Below method creates error message in format [cellName] - [given_message]
-            return $this->createErrorMessageWithNamePrefix('Value is not a valid email address');
-        }
-        
-        return null;
-    }
-}
-```
-
-### More complex imports
-Sometimes, we need to validate dependencies between cells inside a row, or even dependencies between rows.
-We can do that as well. **AbstractExcelImporter** implements checkRow **checkRowRequirements()** method that can be overriden to check required dependencies and add some errors if needed.
-It is called right before model creation in **AbstractModelExcelImporter**, so we can still be able to create object from EXCEL data.
-
-
-Example of dependency validation:
-
-Lets say we have some Model:
-
-```php
-<?php
-
-namespace My\SampleNamespace;
-
-use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\IntegerExcelCell;
-
-class SampleModelClass
-{
-    /**
-     * @ExcelColumn(cellName="Number 1", targetExcelCellClass=IntegerExcelCell::class, columnKey="A")
-     *
-     * @var int
-     */
-    private $num1;
-
-    /**
-     * @ExcelColumn(cellName="Number 1", targetExcelCellClass=IntegerExcelCell::class, columnKey="B")
-     *
-     * @var int
-     */
-    private $num2;
-
-
-    public function getNum1(): int
-    {
-        return $this->num1;
-    }
-    public function setNum1(int $num1): void
-    {
-        $this->num1 = $num1;
-    }
-    public function getNum2(): int
-    {
-        return $this->num2;
-    }
-    public function setNum2(int $num2): void
-    {
-        $this->num2 = $num2;
-    }
-}
-```
-
-Let's assume, that num1 should be bigger than num2. We can validate this dependency like so:
-
-```php
-<?php
-
-namespace My\SampleNamespace;
-
-use Kczer\ExcelImporterBundle\AbstractModelExcelImporter;
-
-class DependencyValidationExcelImport extends AbstractModelExcelImporter
-{
-
-    protected function checkRowRequirements(): void
-    {
-        foreach ($this->getExcelRows() as $excelRow) {
-            $exclCells = $excelRow->getExcelCells();
-            if ($exclCells['A']->getValue() <= $exclCells['B']->getValue()) {
-                
-                $excelRow->addErrorMessage('Number 1 should be bigger than Number 2');
-            }
-        }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function processParsedData(): void
-    {
-        // TODO: Implement processParsedData() method.
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function getImportModelClass(): string
-    {
-        return SampleModelClass::class;
-    }
-}
-```
-
-If validation adds any error, then excel will be considered invalid, therefore models **WILL NOT** be created.
-
-### Data encoding
-
-If you want to encode data from importer (for example to send it with request), You can do it like so:
-
-```php
-<?php
-$rowsJson = $importer->getExcelRowsAsJson();
-```
-
-... and then re-create rows from this JSON:
-
-```php
-<?php
-$importer->parseJson($rowsJson);
+```yaml
+kczer_excel_importer:
+  excel_cell:
+    bool: # BoolExcelCell Configuration
+      empty_as_false: false # Treat empty values as false? (default to true)
+      true_values: # Values that override default true values
+        - absolutely
+        - of course
+        - ofc
+      false_values: # Values that override default false values
+        - absolutely not
+        - of course not
+        - ofcn
 ```
