@@ -176,9 +176,9 @@ abstract class AbstractExcelImporter
     /**
      * @param string $excelFilePath
      * @param int $firstRowMode DEFINES what to do with the first EXCEL row. Possible values: <br>
-     * FIRST_ROW_MODE_SKIP <br>
-     * FIRST_ROW_MODE_DONT_SKIP <br>
-     * FIRST_ROW_MODE_DONT_SKIP_IF_INVALID <br>
+     *                          AbstractExcelImporter::FIRST_ROW_MODE_SKIP <br>
+     *                          AbstractExcelImporter::FIRST_ROW_MODE_DONT_SKIP <br>
+     *                          AbstractExcelImporter::FIRST_ROW_MODE_SKIP_IF_INVALID <br>
      *
      * @return $this
      *
