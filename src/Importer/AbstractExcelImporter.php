@@ -231,10 +231,7 @@ abstract class AbstractExcelImporter
      */
     protected function parseRawExcelRows(int $firstRowMode, bool $namedColumnKeys): void
     {
-        $this
-            ->configureExcelCells()
-            ->filterEmptyExcelRows()
-        ;
+        $this->configureExcelCells();
         if ($namedColumnKeys) {
             $this
                 ->getColumnKeyNameExcelColumnKeyMappings()
@@ -244,6 +241,7 @@ abstract class AbstractExcelImporter
         } else {
             $this->validateColumnKeys();
         }
+        $this->filterEmptyExcelRows();
 
         $firstRowMode = null !== $this->columnKeyMappings ? self::FIRST_ROW_MODE_SKIP : $firstRowMode;
 
@@ -299,9 +297,7 @@ abstract class AbstractExcelImporter
      */
     private function getColumnKeyNameExcelColumnKeyMappings(): self
     {
-        reset($this->rawExcelRows);
-        $headerRow = current($this->rawExcelRows) ?: [];
-
+        $headerRow = $this->getFirstNonEmptyExcelRow();
         $missingColumnKeys = array_udiff(array_keys($this->getExcelCellConfigurations()), $headerRow, 'strcasecmp');
         if (!empty($missingColumnKeys)) {
 
@@ -309,7 +305,7 @@ abstract class AbstractExcelImporter
         }
 
         $this->headerRowIndex = key($this->rawExcelRows);
-        $this->columnKeyMappings = array_flip(array_uintersect(array_keys($this->getExcelCellConfigurations()), $headerRow, 'strcasecmp'));
+        $this->columnKeyMappings = array_flip(array_uintersect($headerRow, array_keys($this->getExcelCellConfigurations()), 'strcasecmp'));
 
         return $this;
     }
@@ -343,6 +339,15 @@ abstract class AbstractExcelImporter
         }
 
         throw new MissingExcelColumnsException(array_keys($missingColumnKeys));
+    }
+
+    private function getFirstNonEmptyExcelRow(): array
+    {
+        return current(
+            array_filter($this->rawExcelRows, static function (array $excelRow): bool {
+                return !empty(array_filter($excelRow));
+            })
+        ) ?: [];
     }
 
     private function prepareExcelRowsMetadata(bool $skippedFirstRow): void
