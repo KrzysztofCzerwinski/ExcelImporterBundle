@@ -5,17 +5,12 @@ namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
 use DateTime;
 use Exception;
-use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * An EXCEL cell that requires value to be string acceptable by DateTime constructor
  */
 class DateTimeExcelCell extends AbstractExcelCell
 {
-    public function __construct(TranslatorInterface $translator)
-    {
-        parent::__construct($translator);
-    }
 
     /**
      * @inheritDoc

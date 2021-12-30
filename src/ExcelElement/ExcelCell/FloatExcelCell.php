@@ -2,38 +2,39 @@
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-use Symfony\Contracts\Translation\TranslatorInterface;
+use function preg_match;
+use function str_replace;
 
 /**
- * An EXCEL cell that requires value to be a valid number
+ * An EXCEL cell that requires value to be a valid number or number with unit
  */
 class FloatExcelCell extends AbstractExcelCell
 {
-    public function __construct(TranslatorInterface $translator)
+    public function getDisplayValue(): string
     {
-        parent::__construct($translator);
+        return str_replace(['\\', '  '], ' ', $this->rawValue);
     }
-
 
     /**
      * @inheritDoc
      */
-    protected function getParsedValue(): ?float
+    protected function getParsedValue(): float
     {
-        return null !== $this->rawValue ? (float)$this->rawValue : null;
-    }
+        /** @example 100 | 100,12\zł | 9.999 kg */
+        preg_match('/^(\d+(?:[,.]\d+)?)(?:[\s\\\]*\p{L}+)?$/iu', $this->rawValue, $matches);
+        [, $value] = $matches;
 
+        return (float)(str_replace(',', '.', $value));
+    }
 
     /**
      * @inheritDoc
      */
     protected function validateValueRequirements(): ?string
     {
-        if (!is_numeric($this->rawValue)) {
-
-            return $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.numeric_value_required');
-        }
-
-        return null;
+        /** @example 100 | 100,12\zł | 9.999   kg */
+        return 1 === preg_match('/^\d+(?:[,.]\d+)?(?:[\s\\\]*\p{L}+)?$/iu', $this->rawValue) ?
+            null :
+            $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.numeric_value_required');
     }
 }

@@ -6,7 +6,6 @@ namespace Kczer\ExcelImporterBundle\Exporter;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ReverseExcelCellManagerFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\ReverseExcelCellManager;
 use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
-use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\FileLoadException;
 use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
@@ -146,15 +145,15 @@ class ModelExcelExporter
      *                                          <li>Callable that takes two arguments : <br> function ($model1, $model2): bool. Returns true if models are considered the same </li>
      *                                          <li>NULL if no comparison needed </li>
      *                                       </ul>
+     * @param bool $namedColumnNames
      * @param int $firstRowMode
      *
      * @return string
      * @throws AnnotationConfigurationException
-     * @throws EmptyExcelColumnException
-     * @throws FileLoadException
-     * @throws InvalidExcelImportException
      * @throws ExcelImportConfigurationException
      * @throws FileAlreadyExistsException
+     * @throws FileLoadException
+     * @throws InvalidExcelImportException
      * @throws InvalidModelPropertyException
      * @throws NotGettablePropertyException
      * @throws ReflectionException
@@ -168,6 +167,7 @@ class ModelExcelExporter
         string $excelFilePath,
         string $newFileNameWithoutExtension = null,
                $comparer = null,
+        bool   $namedColumnNames = true,
         int    $firstRowMode = AbstractExcelImporter::FIRST_ROW_MODE_SKIP
     ): string
     {
@@ -178,7 +178,7 @@ class ModelExcelExporter
         $this->assignBasicDataBasedOnModels($models);
 
         $modelExcelImporter = $this->modelExcelImporterFactory->createModelExcelImporter($this->modelClass);
-        $modelExcelImporter->parseExcelFile($excelFilePath, $firstRowMode);
+        $modelExcelImporter->parseExcelFile($excelFilePath, $namedColumnNames, $firstRowMode);
         if ($modelExcelImporter->hasErrors()) {
 
             throw new InvalidExcelImportException($this->modelClass, $modelExcelImporter->getMergedAllErrorMessages());

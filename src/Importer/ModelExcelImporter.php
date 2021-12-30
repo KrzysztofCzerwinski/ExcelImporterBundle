@@ -1,4 +1,5 @@
 <?php
+/** @noinspection PhpUnused */
 declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Importer;
@@ -6,10 +7,10 @@ namespace Kczer\ExcelImporterBundle\Importer;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
 use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
-use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\EmptyModelClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
+use Kczer\ExcelImporterBundle\Exception\MissingExcelColumnsException;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelFactory;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
@@ -22,7 +23,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     /** @var string */
     private $importModelClass;
 
-    /** @var string|null */
+    /** @var class-string|null */
     private $displayModelClass = null;
 
     /** @var ModelMetadataFactory */
@@ -96,15 +97,15 @@ class ModelExcelImporter extends AbstractExcelImporter
 
 
     /**
-     * @throws EmptyExcelColumnException
      * @throws AnnotationConfigurationException
      * @throws ExcelImportConfigurationException
      * @throws ReflectionException
+     * @throws MissingExcelColumnsException
      */
-    protected function parseRawExcelRows(int $firstRowMode): void
+    protected function parseRawExcelRows(int $firstRowMode, bool $namedColumnKeys): void
     {
         $this->assignModelMetadata();
-        parent::parseRawExcelRows($firstRowMode);
+        parent::parseRawExcelRows($firstRowMode, $namedColumnKeys);
         if (null !== $this->columnKeyMappings) {
             $this->modelMetadata->transformColumnKeyNameKeysToExcelColumnKeys($this->columnKeyMappings);
         }

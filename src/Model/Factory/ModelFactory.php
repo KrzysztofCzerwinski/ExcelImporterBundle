@@ -6,13 +6,12 @@ namespace Kczer\ExcelImporterBundle\Model\Factory;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelRow;
 use Kczer\ExcelImporterBundle\Exception\Annotation\SetterNotCompatibleWithExcelCellValueException;
 use Kczer\ExcelImporterBundle\Model\AbstractDisplayModel;
+use Kczer\ExcelImporterBundle\Model\AbstractErrorAwareModel;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 use Throwable;
 
 class ModelFactory
 {
-    public const DISPLAY_MODE_ERROR_MESSAGE_SETTER_NAME = 'setAllMergedErrorMessages';
-
     /**
      * @param string $modelClass
      * @param ExcelRow[] $excelRows
@@ -28,7 +27,7 @@ class ModelFactory
     }
 
     /**
-     * @param string $displayModelClass
+     * @param class-string $displayModelClass
      * @param ExcelRow[] $excelRows
      * @param ModelMetadata $modelMetadata
      *
@@ -42,7 +41,7 @@ class ModelFactory
     }
 
     /**
-     * @param string $modelClass
+     * @param class-string $modelClass
      * @param ExcelRow[] $excelRows
      * @param ModelMetadata $modelMetadata
      * @param bool $createDisplayModel
@@ -70,10 +69,11 @@ class ModelFactory
                     throw new SetterNotCompatibleWithExcelCellValueException($modelClass, $excelCell, $modelPropertyMetadata, $exception);
                 }
             }
-            if ($model instanceof AbstractDisplayModel) {
+            if ($model instanceof AbstractDisplayModel || $model instanceof AbstractErrorAwareModel) {
                 $model
                     ->setMergedAllErrorMessages($excelRow->getMergedAllErrorMessages())
-                    ->setValid(!$excelRow->hasErrors());
+                    ->setValid(!$excelRow->hasErrors())
+                ;
             }
             $models[] = $model;
         }

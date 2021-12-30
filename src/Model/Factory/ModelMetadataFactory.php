@@ -54,26 +54,33 @@ class ModelMetadataFactory
 
         $modelPropertiesMetadata = [];
         foreach ($modelReflectionClass->getProperties() as $reflectionProperty) {
-            if ($isDisplayModelClassDefined && !$displayModelReflectionClass->hasProperty($reflectionProperty->getName())) {
-
-                throw new MissingModelPropertyException($displayModelReflectionClass->getName(), $reflectionProperty->getName());
-            }
-
             /** @var ExcelColumn|null $excelColumn */
             $excelColumn = $this->annotationReader->getPropertyAnnotation($reflectionProperty, ExcelColumn::class);
             if (null === $excelColumn) {
 
                 continue;
             }
+            if ($isDisplayModelClassDefined && !$displayModelReflectionClass->hasProperty($reflectionProperty->getName())) {
+
+                throw new MissingModelPropertyException($displayModelReflectionClass->getName(), $reflectionProperty->getName());
+            }
+
             $modelPropertyMetadata = (new ModelPropertyMetadata())
                 ->setReflectionProperty($reflectionProperty)
                 ->setExcelColumn($excelColumn)
                 ->setPropertyName($reflectionProperty->getName())
                 ->setValidators($this->getPropertyValidators($reflectionProperty));
 
-            $this->validateExcelCellClass($modelPropertyMetadata)->validatePropertySettable($modelReflectionClass, $modelPropertyMetadata);
+            $this
+                ->validateExcelCellClass($modelPropertyMetadata)
+                ->validatePropertySettable($modelReflectionClass, $modelPropertyMetadata)
+            ;
             if ($isDisplayModelClassDefined) {
-                $this->validateExcelCellClass($modelPropertyMetadata)->validatePropertySettable($displayModelReflectionClass, $modelPropertyMetadata)->validateDisplayModelSetterType($displayModelReflectionClass, $modelPropertyMetadata);
+                $this
+                    ->validateExcelCellClass($modelPropertyMetadata)
+                    ->validatePropertySettable($displayModelReflectionClass, $modelPropertyMetadata)
+                    ->validateDisplayModelSetterType($displayModelReflectionClass, $modelPropertyMetadata)
+                ;
             }
             $columnKey = $this->translator->trans($excelColumn->getColumnKey());
             if (key_exists($columnKey, $modelPropertiesMetadata)) {

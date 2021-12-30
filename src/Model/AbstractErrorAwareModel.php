@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Model;
 
-abstract class AbstractDisplayModel
+abstract class AbstractErrorAwareModel
 {
     /** @var bool */
     private $valid;

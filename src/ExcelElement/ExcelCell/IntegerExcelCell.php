@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-use Symfony\Contracts\Translation\TranslatorInterface;
 use function ctype_digit;
 
 /**
@@ -11,11 +10,6 @@ use function ctype_digit;
  */
 class IntegerExcelCell extends AbstractExcelCell
 {
-    public function __construct(TranslatorInterface $translator)
-    {
-        parent::__construct($translator);
-    }
-
     /**
      * @inheritDoc
      */

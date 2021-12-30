@@ -14,8 +14,8 @@ use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\FileLoadException;
-use Kczer\ExcelImporterBundle\Exception\EmptyExcelColumnException;
 use Kczer\ExcelImporterBundle\Exception\JsonExcelRowsLoadException;
+use Kczer\ExcelImporterBundle\Exception\MissingExcelColumnsException;
 use Kczer\ExcelImporterBundle\Model\ExcelRowsMetadata;
 use Kczer\ExcelImporterBundle\Model\Factory\ExcelRowsMetadataFactory;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -27,8 +27,11 @@ use function array_keys;
 use function array_map;
 use function array_search;
 use function array_slice;
+use function array_udiff;
+use function array_uintersect;
 use function array_unshift;
 use function array_values;
+use function current;
 use function implode;
 use function json_decode;
 use function json_encode;
@@ -155,11 +158,16 @@ abstract class AbstractExcelImporter
     }
 
     /**
-     * @throws EmptyExcelColumnException
+     * @param string $jsonExcelRows
+     * @param bool $namedColumnKeys TRUE if named column keys are used in model, FALSE otherwise
+     *
+     * @return $this
+     *
      * @throws JsonExcelRowsLoadException
      * @throws UnexpectedExcelCellClassException
+     * @throws MissingExcelColumnsException
      */
-    public function parseJson(string $jsonExcelRows): self
+    public function parseJson(string $jsonExcelRows, bool $namedColumnKeys = true): self
     {
         $this->rawExcelRows = json_decode($jsonExcelRows, true);
         if (null === $this->rawExcelRows) {
@@ -168,13 +176,14 @@ abstract class AbstractExcelImporter
         }
         $this
             ->castRawExcelRowsString()
-            ->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP);
+            ->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP, $namedColumnKeys);
 
         return $this;
     }
 
     /**
      * @param string $excelFilePath
+     * @param bool $namedColumnKeys TRUE if named column keys are used in model, FALSE otherwise
      * @param int $firstRowMode DEFINES what to do with the first EXCEL row. Possible values: <br>
      *                          AbstractExcelImporter::FIRST_ROW_MODE_SKIP <br>
      *                          AbstractExcelImporter::FIRST_ROW_MODE_DONT_SKIP <br>
@@ -183,10 +192,10 @@ abstract class AbstractExcelImporter
      * @return $this
      *
      * @throws FileLoadException
-     * @throws EmptyExcelColumnException
      * @throws UnexpectedExcelCellClassException
+     * @throws MissingExcelColumnsException
      */
-    public function parseExcelFile(string $excelFilePath, int $firstRowMode = self::FIRST_ROW_MODE_SKIP): self
+    public function parseExcelFile(string $excelFilePath, bool $namedColumnKeys = true, int $firstRowMode = self::FIRST_ROW_MODE_SKIP): self
     {
         try {
             $sheet = IOFactory::load($excelFilePath)->getActiveSheet();
@@ -198,7 +207,7 @@ abstract class AbstractExcelImporter
 
         $this
             ->castRawExcelRowsString()
-            ->parseRawExcelRows($firstRowMode);
+            ->parseRawExcelRows($firstRowMode, $namedColumnKeys);
 
         return $this;
     }
@@ -217,18 +226,24 @@ abstract class AbstractExcelImporter
     }
 
     /**
-     * @throws EmptyExcelColumnException
      * @throws UnexpectedExcelCellClassException
+     * @throws MissingExcelColumnsException
      */
-    protected function parseRawExcelRows(int $firstRowMode): void
+    protected function parseRawExcelRows(int $firstRowMode, bool $namedColumnKeys): void
     {
         $this
             ->configureExcelCells()
-            ->determineFirstColumnKeyMatchingRowIndex()
-            ->getColumnKeyNameExcelColumnKeyMappings()
-            ->filterPreHeaderRows()
-            ->transformExcelCellConfigurationsKeysIfRequired()
-            ->filterEmptyExcelRows();
+            ->filterEmptyExcelRows()
+        ;
+        if ($namedColumnKeys) {
+            $this
+                ->getColumnKeyNameExcelColumnKeyMappings()
+                ->filterPreHeaderRows()
+                ->transformExcelCellConfigurationsKeys()
+            ;
+        } else {
+            $this->validateColumnKeys();
+        }
 
         $firstRowMode = null !== $this->columnKeyMappings ? self::FIRST_ROW_MODE_SKIP : $firstRowMode;
 
@@ -279,29 +294,22 @@ abstract class AbstractExcelImporter
         return $this;
     }
 
-    private function determineFirstColumnKeyMatchingRowIndex(): self
-    {
-        $columnKeyNames = array_keys($this->getExcelCellConfigurations());
-        foreach ($this->rawExcelRows as $index => $rawExcelCellValues) {
-            if (!empty(array_diff($columnKeyNames, $rawExcelCellValues))) {
-
-                continue;
-            }
-            $this->headerRowIndex = $index;
-
-            return $this;
-        }
-
-        return $this;
-    }
-
+    /**
+     * @throws MissingExcelColumnsException
+     */
     private function getColumnKeyNameExcelColumnKeyMappings(): self
     {
-        if (null === $this->headerRowIndex) {
+        reset($this->rawExcelRows);
+        $headerRow = current($this->rawExcelRows) ?: [];
 
-            return $this;
+        $missingColumnKeys = array_udiff(array_keys($this->getExcelCellConfigurations()), $headerRow, 'strcasecmp');
+        if (!empty($missingColumnKeys)) {
+
+            throw new MissingExcelColumnsException($missingColumnKeys);
         }
-        $this->columnKeyMappings = array_flip(array_intersect($this->rawExcelRows[$this->headerRowIndex], array_keys($this->getExcelCellConfigurations())));
+
+        $this->headerRowIndex = key($this->rawExcelRows);
+        $this->columnKeyMappings = array_flip(array_uintersect(array_keys($this->getExcelCellConfigurations()), $headerRow, 'strcasecmp'));
 
         return $this;
     }
@@ -314,15 +322,27 @@ abstract class AbstractExcelImporter
         return $this;
     }
 
-    private function transformExcelCellConfigurationsKeysIfRequired(): self
+    private function transformExcelCellConfigurationsKeys(): void
     {
         foreach ($this->columnKeyMappings ?? [] as $columnKeyName => $excelColumnKey) {
             $this->excelCellConfigurations[$excelColumnKey] = $this->excelCellConfigurations[$columnKeyName];
 
             unset($this->excelCellConfigurations[$columnKeyName]);
         }
+    }
 
-        return $this;
+    /**
+     * @throws MissingExcelColumnsException
+     */
+    private function validateColumnKeys(): void
+    {
+        $missingColumnKeys = array_diff_key($this->excelCellConfigurations, current($this->rawExcelRows) ?: []);
+        if (empty($missingColumnKeys)) {
+
+            return;
+        }
+
+        throw new MissingExcelColumnsException(array_keys($missingColumnKeys));
     }
 
     private function prepareExcelRowsMetadata(bool $skippedFirstRow): void

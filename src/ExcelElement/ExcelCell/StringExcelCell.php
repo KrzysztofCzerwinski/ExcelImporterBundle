@@ -2,19 +2,11 @@
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-use Symfony\Contracts\Translation\TranslatorInterface;
-
 /**
  * A Standard EXCEL cell type, that doesn't require any special validations
  */
 class StringExcelCell extends AbstractExcelCell
 {
-    public function __construct(TranslatorInterface $translator)
-    {
-        parent::__construct($translator);
-    }
-
-
     /**
      * @inheritDoc
      */
