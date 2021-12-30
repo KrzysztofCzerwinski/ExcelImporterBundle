@@ -301,7 +301,7 @@ abstract class AbstractExcelImporter
         $missingColumnKeys = array_udiff(array_keys($this->getExcelCellConfigurations()), $headerRow, 'strcasecmp');
         if (!empty($missingColumnKeys)) {
 
-            throw new MissingExcelColumnsException($missingColumnKeys);
+            throw new MissingExcelColumnsException(array_map([$this->translator, 'trans'], $missingColumnKeys));
         }
 
         $this->headerRowIndex = key($this->rawExcelRows);
@@ -338,7 +338,7 @@ abstract class AbstractExcelImporter
             return;
         }
 
-        throw new MissingExcelColumnsException(array_keys($missingColumnKeys));
+        throw new MissingExcelColumnsException(array_map([$this->translator, 'trans'], array_keys($missingColumnKeys)));
     }
 
     private function getFirstNonEmptyExcelRow(): array
