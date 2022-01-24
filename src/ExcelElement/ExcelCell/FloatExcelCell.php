@@ -18,8 +18,12 @@ class FloatExcelCell extends AbstractExcelCell
     /**
      * @inheritDoc
      */
-    protected function getParsedValue(): float
+    protected function getParsedValue(): ?float
     {
+        if (null === $this->rawValue) {
+
+            return null;
+        }
         /** @example 100 | 100,12\zł | 9.999 kg */
         preg_match('/^(\d+(?:[,.]\d+)?)(?:[\s\\\]*\p{L}+)?$/iu', $this->rawValue, $matches);
         [, $value] = $matches;
