@@ -66,7 +66,7 @@ abstract class AbstractExcelImporter
     /** @var ExcelRowFactory */
     private $excelRowFactory;
 
-    /** @var ExcelCellConfiguration[] */
+    /** @var array<string, ExcelCellConfiguration> */
     private $excelCellConfigurations = [];
 
     /** @var ExcelRow[] */
@@ -116,11 +116,23 @@ abstract class AbstractExcelImporter
     }
 
     /**
-     * @return ExcelCellConfiguration[]
+     * @return array<string, ExcelCellConfiguration>
      */
-    protected function getExcelCellConfigurations(): array
+    protected function getColumnExcelCellConfigurations(): array
     {
-        return $this->excelCellConfigurations;
+        return array_filter($this->excelCellConfigurations, static function (ExcelCellConfiguration $excelCellConfiguration): bool {
+            return $excelCellConfiguration->isColumn();
+        });
+    }
+
+    /**
+     * @return array<string, ExcelCellConfiguration>
+     */
+    protected function getFieldExcelCellConfigurations(): array
+    {
+        return array_filter($this->excelCellConfigurations, static function (ExcelCellConfiguration $excelCellConfiguration): bool {
+            return !$excelCellConfiguration->isColumn();
+        });
     }
 
 
@@ -279,15 +291,29 @@ abstract class AbstractExcelImporter
      * @param string $cellName Cell name in EXCEL file
      * @param string $columnKey Column key in EXCEL file
      * @param bool $cellRequired Whether cell value is required in an EXCEL file
+     * @param bool $isColumn Whether cell value is taken from column in current row. static field otherwise
      * @param AbstractValidator[] $validators Validators extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator that will validate raw value
      *
      * @return AbstractExcelImporter
      *
      * @throws UnexpectedClassException
      */
-    protected function addExcelCell(string $excelCellClass, string $cellName, string $columnKey, bool $cellRequired = true, array $validators = []): self
+    protected function addExcelCell(
+        string $excelCellClass,
+        string $cellName,
+        string $columnKey,
+        bool $cellRequired = true,
+        bool $isColumn = true,
+        array $validators = []
+    ): self
     {
-        $this->excelCellConfigurations[$this->translator->trans($columnKey)] = new ExcelCellConfiguration($excelCellClass, $cellName, $cellRequired, $validators);
+        $this->excelCellConfigurations[$this->translator->trans($columnKey)] = new ExcelCellConfiguration(
+            $excelCellClass,
+            $cellName,
+            $cellRequired,
+            $isColumn,
+            $validators
+        );
 
         return $this;
     }
@@ -298,14 +324,14 @@ abstract class AbstractExcelImporter
     private function getColumnKeyNameExcelColumnKeyMappings(): self
     {
         $headerRow = $this->getFirstNonEmptyExcelRow();
-        $missingColumnKeys = array_udiff(array_keys($this->getExcelCellConfigurations()), $headerRow, 'strcasecmp');
+        $missingColumnKeys = array_udiff(array_keys($this->getColumnExcelCellConfigurations()), $headerRow, 'strcasecmp');
         if (!empty($missingColumnKeys)) {
 
             throw new MissingExcelColumnsException(array_map([$this->translator, 'trans'], $missingColumnKeys));
         }
 
         $this->headerRowIndex = key($this->rawExcelRows);
-        $this->columnKeyMappings = array_flip(array_uintersect($headerRow, array_keys($this->getExcelCellConfigurations()), 'strcasecmp'));
+        $this->columnKeyMappings = array_flip(array_uintersect($headerRow, array_keys($this->getColumnExcelCellConfigurations()), 'strcasecmp'));
 
         return $this;
     }
@@ -363,7 +389,7 @@ abstract class AbstractExcelImporter
     private function createSkeletonExcelCells(): array
     {
         $initialExcelCells = [];
-        foreach ($this->getExcelCellConfigurations() as $columnKey => $excelCellConfiguration) {
+        foreach ($this->getColumnExcelCellConfigurations() as $columnKey => $excelCellConfiguration) {
             $initialExcelCells[$columnKey] = $this->excelCellFactory->makeSkeletonFromConfiguration($excelCellConfiguration);
         }
 

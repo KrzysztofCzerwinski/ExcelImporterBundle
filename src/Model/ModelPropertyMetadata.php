@@ -13,26 +13,25 @@ use function in_array;
 
 class ModelPropertyMetadata
 {
-    /** @var string */
     public const GETTER_PREFIX = 'get';
 
-    /** @var string */
     public const BOOL_IS_GETTER_PREFIX = 'is';
 
-    /** @var string */
     public const BOOL_HAS_GETTER_PREFIX = 'has';
 
-    /** @var string */
     public const SETTER_PREFIX = 'set';
 
     /** @var ReflectionProperty */
     private $reflectionProperty;
 
-    /** @var ExcelColumn */
+    /** @var ExcelColumn|null */
     private $excelColumn;
 
     /** @var string */
     private $propertyName;
+
+    /** @var bool */
+    private $inDisplayModel = true;
 
     /** @var AbstractValidator[] */
     private $validators;
@@ -52,12 +51,12 @@ class ModelPropertyMetadata
     }
 
 
-    public function getExcelColumn(): ExcelColumn
+    public function getExcelColumn(): ?ExcelColumn
     {
         return $this->excelColumn;
     }
 
-    public function setExcelColumn(ExcelColumn $excelColumn): self
+    public function setExcelColumn(?ExcelColumn $excelColumn): self
     {
         $this->excelColumn = $excelColumn;
         return $this;
@@ -71,6 +70,42 @@ class ModelPropertyMetadata
     public function setPropertyName(string $propertyName): self
     {
         $this->propertyName = $propertyName;
+        return $this;
+    }
+
+    public function isInDisplayModel(): bool
+    {
+        return $this->inDisplayModel;
+    }
+
+    public function setInDisplayModel(bool $inDisplayModel): self
+    {
+        $this->inDisplayModel = $inDisplayModel;
+
+        return $this;
+    }
+
+    /**
+     * Determine whether property is mapped by excel column or by single excel field
+     *
+     * @return bool
+     */
+    public function hasColumnMapping(): bool
+    {
+        return !$this->getExcelColumn()->isField();
+    }
+
+    /**
+     * @return AbstractValidator[]
+     */
+    public function getValidators(): array
+    {
+        return $this->validators;
+    }
+
+    public function setValidators(array $validators): ModelPropertyMetadata
+    {
+        $this->validators = $validators;
         return $this;
     }
 
@@ -108,7 +143,7 @@ class ModelPropertyMetadata
     }
 
     /**
-     * @return string[]
+     * @return array{string, string, string}
      */
     public function getAllSupportedGetterNames(): array
     {
@@ -118,19 +153,5 @@ class ModelPropertyMetadata
     public function getSetterName(): string
     {
         return sprintf('%s%s', self::SETTER_PREFIX, ucfirst($this->propertyName));
-    }
-
-    /**
-     * @return AbstractValidator[]
-     */
-    public function getValidators(): array
-    {
-        return $this->validators;
-    }
-
-    public function setValidators(array $validators): ModelPropertyMetadata
-    {
-        $this->validators = $validators;
-        return $this;
     }
 }

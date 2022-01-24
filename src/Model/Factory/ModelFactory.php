@@ -50,13 +50,22 @@ class ModelFactory
      *
      * @throws SetterNotCompatibleWithExcelCellValueException
      */
-    private function createModelsFromExcelRowsAndModelMetadata(string $modelClass, array $excelRows, ModelMetadata $modelMetadata, bool $createDisplayModel = false): array
+    private function createModelsFromExcelRowsAndModelMetadata(
+        string $modelClass,
+        array $excelRows,
+        ModelMetadata $modelMetadata,
+        bool $createDisplayModel = false
+    ): array
     {
         $models = [];
         foreach ($excelRows as $excelRow) {
             $model = new $modelClass();
             $excelCells = $excelRow->getExcelCells();
             foreach ($modelMetadata->getModelPropertiesMetadata() as $columnKey => $modelPropertyMetadata) {
+                if (($createDisplayModel && !$modelPropertyMetadata->isInDisplayModel())) {
+
+                    continue;
+                }
                 $setterMethodName = $modelPropertyMetadata->getSetterName();
                 $excelCell = $excelCells[$columnKey];
                 $excelCellValue = $createDisplayModel ? $excelCell->getDisplayValue() : $excelCell->getValue();

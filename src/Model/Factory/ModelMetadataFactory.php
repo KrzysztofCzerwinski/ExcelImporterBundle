@@ -10,11 +10,10 @@ use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
 use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidDisplayModelSetterParameterTypeException;
-use Kczer\ExcelImporterBundle\Exception\Annotation\MissingModelPropertyException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\ModelPropertyNotSettableException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\NotExistingModelClassException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedColumnExcelCellClassException;
-use Kczer\ExcelImporterBundle\Exception\DuplicateColumnKeyException;
+use Kczer\ExcelImporterBundle\Exception\DuplicateExcelIdentifierException;
 use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 use Kczer\ExcelImporterBundle\Model\ModelPropertyMetadata;
@@ -54,46 +53,43 @@ class ModelMetadataFactory
 
         $modelPropertiesMetadata = [];
         foreach ($modelReflectionClass->getProperties() as $reflectionProperty) {
-            /** @var ExcelColumn|null $excelColumn */
             $excelColumn = $this->annotationReader->getPropertyAnnotation($reflectionProperty, ExcelColumn::class);
             if (null === $excelColumn) {
 
                 continue;
             }
-            if ($isDisplayModelClassDefined && !$displayModelReflectionClass->hasProperty($reflectionProperty->getName())) {
-
-                throw new MissingModelPropertyException($displayModelReflectionClass->getName(), $reflectionProperty->getName());
-            }
-
+            $isPropertyInDisplayModel = $isDisplayModelClassDefined && $displayModelReflectionClass->hasProperty($reflectionProperty->getName());
             $modelPropertyMetadata = (new ModelPropertyMetadata())
                 ->setReflectionProperty($reflectionProperty)
                 ->setExcelColumn($excelColumn)
                 ->setPropertyName($reflectionProperty->getName())
-                ->setValidators($this->getPropertyValidators($reflectionProperty));
-
+                ->setInDisplayModel($isPropertyInDisplayModel)
+                ->setValidators($this->getPropertyValidators($reflectionProperty))
+            ;
             $this
                 ->validateExcelCellClass($modelPropertyMetadata)
                 ->validatePropertySettable($modelReflectionClass, $modelPropertyMetadata)
             ;
-            if ($isDisplayModelClassDefined) {
+
+            if ($isPropertyInDisplayModel) {
                 $this
-                    ->validateExcelCellClass($modelPropertyMetadata)
                     ->validatePropertySettable($displayModelReflectionClass, $modelPropertyMetadata)
                     ->validateDisplayModelSetterType($displayModelReflectionClass, $modelPropertyMetadata)
                 ;
             }
-            $columnKey = $this->translator->trans($excelColumn->getColumnKey());
-            if (key_exists($columnKey, $modelPropertiesMetadata)) {
+            $excelIdentifier = $this->translator->trans($excelColumn->getColumnKey());
+            if (key_exists($excelIdentifier, $modelPropertiesMetadata)) {
 
-                throw new DuplicateColumnKeyException($columnKey);
+                throw new DuplicateExcelIdentifierException($excelIdentifier);
             }
 
-            $modelPropertiesMetadata[$columnKey] = $modelPropertyMetadata;
+            $modelPropertiesMetadata[$excelIdentifier] = $modelPropertyMetadata;
         }
 
         return (new ModelMetadata())
             ->setModelClassName($modelReflectionClass->getName())
-            ->setModelPropertiesMetadata($modelPropertiesMetadata);
+            ->setModelPropertiesMetadata($modelPropertiesMetadata)
+        ;
     }
 
     /**

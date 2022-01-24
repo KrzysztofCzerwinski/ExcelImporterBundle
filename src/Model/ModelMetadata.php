@@ -5,15 +5,16 @@ namespace Kczer\ExcelImporterBundle\Model;
 
 use Kczer\ExcelImporterBundle\Exception\Exporter\InvalidModelPropertyException;
 use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
+use function array_diff_key;
 use function array_filter;
 use function current;
 
 class ModelMetadata
 {
-    /** @var string */
+    /** @var class-string */
     private $modelClassName;
 
-    /** @var ModelPropertyMetadata[] Keys are column keys */
+    /** @var array<string, ModelPropertyMetadata> Keys are excel identifiers */
     private $modelPropertiesMetadata;
 
 
@@ -22,14 +23,17 @@ class ModelMetadata
         return $this->modelClassName;
     }
 
-    public function setModelClassName(string $modelClassName): ModelMetadata
+    /**
+     * @param class-string $modelClassName
+     */
+    public function setModelClassName(string $modelClassName): self
     {
         $this->modelClassName = $modelClassName;
         return $this;
     }
 
     /**
-     * @return ModelPropertyMetadata[] Keys are column keys
+     * @return array<string, ModelPropertyMetadata> Keys are column keys
      */
     public function getModelPropertiesMetadata(): array
     {
@@ -37,7 +41,7 @@ class ModelMetadata
     }
 
     /**
-     * @param ModelPropertyMetadata[] $modelPropertiesMetadata
+     * @param array<string, ModelPropertyMetadata> $modelPropertiesMetadata
      */
     public function setModelPropertiesMetadata(array $modelPropertiesMetadata): self
     {

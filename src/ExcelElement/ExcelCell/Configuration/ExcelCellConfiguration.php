@@ -22,6 +22,9 @@ class ExcelCellConfiguration
     /** @var bool */
     private $cellRequired;
 
+    /** @var bool */
+    private $column;
+
     /** @var AbstractValidator[] */
     private $validators;
 
@@ -29,11 +32,12 @@ class ExcelCellConfiguration
      * @param string $excelCellClass Excel cell class extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell
      * @param string $cellName Cell name in EXCEL file
      * @param bool $cellRequired Whether cell value is required in an EXCEL file
+     * @param bool $isColumn Whether cell value is taken from column in current row. static field otherwise
      * @param AbstractValidator[] Validator classes extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\ValidatorInterface that will validate raw value
      *
      * @throws UnexpectedClassException
      */
-    public function __construct(string $excelCellClass, string $cellName, bool $cellRequired = true, array $validators = [])
+    public function __construct(string $excelCellClass, string $cellName, bool $cellRequired = true, bool $isColumn = true, array $validators = [])
     {
         if (!is_a($excelCellClass, AbstractExcelCell::class, true)) {
 
@@ -43,6 +47,7 @@ class ExcelCellConfiguration
         $this->excelCellClass = $excelCellClass;
         $this->cellName = $cellName;
         $this->cellRequired = $cellRequired;
+        $this->column = $isColumn;
         $this->validators = $validators;
     }
 
@@ -63,6 +68,11 @@ class ExcelCellConfiguration
     public function isCellRequired(): bool
     {
         return $this->cellRequired;
+    }
+
+    public function isColumn(): bool
+    {
+        return $this->column;
     }
 
     /**

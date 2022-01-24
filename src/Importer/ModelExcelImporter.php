@@ -20,10 +20,10 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 class ModelExcelImporter extends AbstractExcelImporter
 {
-    /** @var string */
+    /** @var class-string */
     private $importModelClass;
 
-    /** @var class-string|null */
+    /** @var class-string<AbstractDisplayModel>|null */
     private $displayModelClass = null;
 
     /** @var ModelMetadataFactory */
@@ -104,7 +104,7 @@ class ModelExcelImporter extends AbstractExcelImporter
      */
     protected function parseRawExcelRows(int $firstRowMode, bool $namedColumnKeys): void
     {
-        $this->assignModelMetadata();
+        $this->modelMetadata = $this->modelMetadataFactory->createMetadataFromModelClass($this->getImportModelClass(), $this->displayModelClass);
         parent::parseRawExcelRows($firstRowMode, $namedColumnKeys);
         if (null !== $this->columnKeyMappings) {
             $this->modelMetadata->transformColumnKeyNameKeysToExcelColumnKeys($this->columnKeyMappings);
@@ -124,19 +124,15 @@ class ModelExcelImporter extends AbstractExcelImporter
         foreach ($this->modelMetadata->getModelPropertiesMetadata() as $columnKey => $propertyMetadata) {
             $propertyExcelColumn = $propertyMetadata->getExcelColumn();
 
-            $this->addExcelCell($propertyExcelColumn->getTargetExcelCellClass(), $propertyExcelColumn->getCellName(), $columnKey, $propertyExcelColumn->isRequired(), $propertyMetadata->getValidators());
+            $this->addExcelCell(
+                $propertyExcelColumn->getTargetExcelCellClass(),
+                $propertyExcelColumn->getCellName(), $columnKey,
+                $propertyExcelColumn->isRequired(),
+                $propertyMetadata->hasColumnMapping(),
+                $propertyMetadata->getValidators()
+            );
         }
 
         return $this;
-    }
-
-    /**
-     * @throws ExcelImportConfigurationException
-     * @throws AnnotationConfigurationException
-     * @throws ReflectionException
-     */
-    private function assignModelMetadata(): void
-    {
-        $this->modelMetadata = $this->modelMetadataFactory->createMetadataFromModelClass($this->getImportModelClass(), $this->displayModelClass);
     }
 }
