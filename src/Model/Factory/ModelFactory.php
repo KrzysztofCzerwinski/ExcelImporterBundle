@@ -62,7 +62,7 @@ class ModelFactory
             $model = new $modelClass();
             $excelCells = $excelRow->getExcelCells();
             foreach ($modelMetadata->getModelPropertiesMetadata() as $columnKey => $modelPropertyMetadata) {
-                if (($createDisplayModel && !$modelPropertyMetadata->isInDisplayModel())) {
+                if ($createDisplayModel && !$modelPropertyMetadata->isInDisplayModel()) {
 
                     continue;
                 }

@@ -10,7 +10,7 @@ class InvalidExcelFieldIdException extends AnnotationConfigurationException
     public function __construct(string $fieldId, Throwable $previous = null)
     {
         parent::__construct(
-            "'$fieldId' is not valid field id. excel field id in format [A-Z]+[0-9]+ required",
+            "'$fieldId' is not valid field id. excel field id should contain from at least one letter column key and number row number",
             0,
             $previous
         );

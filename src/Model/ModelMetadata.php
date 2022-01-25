@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Model;
 
+use Kczer\ExcelImporterBundle\Exception\DuplicateExcelIdentifierException;
 use Kczer\ExcelImporterBundle\Exception\Exporter\InvalidModelPropertyException;
 use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
-use function array_diff_key;
 use function array_filter;
 use function current;
 
@@ -33,7 +33,7 @@ class ModelMetadata
     }
 
     /**
-     * @return array<string, ModelPropertyMetadata> Keys are column keys
+     * @return array<string, ModelPropertyMetadata> Keys are column identifiers
      */
     public function getModelPropertiesMetadata(): array
     {
@@ -41,11 +41,15 @@ class ModelMetadata
     }
 
     /**
-     * @param array<string, ModelPropertyMetadata> $modelPropertiesMetadata
+     * @throws DuplicateExcelIdentifierException
      */
-    public function setModelPropertiesMetadata(array $modelPropertiesMetadata): self
+    public function addModelPropertyMetadata(string $columnIdentifier, ModelPropertyMetadata $modelPropertyMetadata): self
     {
-        $this->modelPropertiesMetadata = $modelPropertiesMetadata;
+        if (key_exists($columnIdentifier, $this->modelPropertiesMetadata)) {
+
+            throw new DuplicateExcelIdentifierException($columnIdentifier);
+        }
+        $this->modelPropertiesMetadata[$columnIdentifier] = $modelPropertyMetadata;
 
         return $this;
     }

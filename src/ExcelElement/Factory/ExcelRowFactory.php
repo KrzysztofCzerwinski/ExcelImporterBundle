@@ -9,19 +9,24 @@ use Kczer\ExcelImporterBundle\ExcelElement\ExcelRow;
 class ExcelRowFactory
 {
     /**
-     * @param AbstractExcelCell[] $skeletonExcelCells
+     * @param array<string, AbstractExcelCell> $columnMappedInitialExcelCells
+     * @param array<string, AbstractExcelCell> $fieldMappedExcelCells
      * @param string[] $rawCellValues
      *
      * @return ExcelRow
      */
-    public function createFromExcelCellSkeletonsAndRawCellValues(array $skeletonExcelCells, array $rawCellValues): ExcelRow
+    public function createFromInitialExcelCellsAndRawCellValues(
+        array $columnMappedInitialExcelCells,
+        array $fieldMappedExcelCells,
+        array $rawCellValues
+    ): ExcelRow
     {
         /** @var AbstractExcelCell[] $excelCells */
         $excelCells = [];
-        foreach ($skeletonExcelCells as $columnKey => $skeletonExcelCell) {
+        foreach ($columnMappedInitialExcelCells as $columnKey => $skeletonExcelCell) {
             $excelCells[$columnKey] = (clone $skeletonExcelCell)->setRawValue($rawCellValues[$columnKey]);
         }
 
-        return (new ExcelRow())->setExcelCells($excelCells);
+        return (new ExcelRow())->setExcelCells($excelCells + $fieldMappedExcelCells);
     }
 }

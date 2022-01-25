@@ -8,13 +8,11 @@ use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
 use Kczer\ExcelImporterBundle\Annotation\Validator\AbstractExcelColumnValidator;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
-use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidDisplayModelSetterParameterTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\ModelPropertyNotSettableException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\NotExistingModelClassException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedColumnExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\DuplicateExcelIdentifierException;
-use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 use Kczer\ExcelImporterBundle\Model\ModelPropertyMetadata;
 use ReflectionClass;
@@ -24,7 +22,6 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 use function array_filter;
 use function array_map;
 use function is_a;
-use function key_exists;
 
 class ModelMetadataFactory
 {
@@ -41,17 +38,25 @@ class ModelMetadataFactory
     }
 
     /**
-     * @throws AnnotationConfigurationException
-     * @throws ExcelImportConfigurationException
+     * @param string $modelClass
+     * @param string|null $displayModelClass
+     *
+     * @return ModelMetadata
+     *
+     * @throws DuplicateExcelIdentifierException
+     * @throws InvalidDisplayModelSetterParameterTypeException
+     * @throws ModelPropertyNotSettableException
+     * @throws NotExistingModelClassException
      * @throws ReflectionException
+     * @throws UnexpectedColumnExcelCellClassException
      */
-    public function createMetadataFromModelClass(string $modelClass, ?string $displayModelClass): ModelMetadata
+    public function createMetadataFromModelClass(string $modelClass, ?string $displayModelClass): array
     {
         $modelReflectionClass = $this->obtainModelReflectionClass($modelClass);
         $isDisplayModelClassDefined = null !== $displayModelClass;
         $displayModelReflectionClass = $isDisplayModelClassDefined ? $this->obtainModelReflectionClass($displayModelClass) : null;
 
-        $modelPropertiesMetadata = [];
+        $modelMetadata = (new ModelMetadata())->setModelClassName($modelReflectionClass->getName());
         foreach ($modelReflectionClass->getProperties() as $reflectionProperty) {
             $excelColumn = $this->annotationReader->getPropertyAnnotation($reflectionProperty, ExcelColumn::class);
             if (null === $excelColumn) {
@@ -77,19 +82,11 @@ class ModelMetadataFactory
                     ->validateDisplayModelSetterType($displayModelReflectionClass, $modelPropertyMetadata)
                 ;
             }
-            $excelIdentifier = $this->translator->trans($excelColumn->getColumnKey());
-            if (key_exists($excelIdentifier, $modelPropertiesMetadata)) {
 
-                throw new DuplicateExcelIdentifierException($excelIdentifier);
-            }
-
-            $modelPropertiesMetadata[$excelIdentifier] = $modelPropertyMetadata;
+            $modelMetadata->addModelPropertyMetadata($this->translator->trans($excelColumn->getColumnKey()), $modelPropertyMetadata);
         }
 
-        return (new ModelMetadata())
-            ->setModelClassName($modelReflectionClass->getName())
-            ->setModelPropertiesMetadata($modelPropertiesMetadata)
-        ;
+        return $modelMetadata;
     }
 
     /**
