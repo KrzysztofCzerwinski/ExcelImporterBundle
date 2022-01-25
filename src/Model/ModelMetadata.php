@@ -6,6 +6,7 @@ namespace Kczer\ExcelImporterBundle\Model;
 use Kczer\ExcelImporterBundle\Exception\DuplicateExcelIdentifierException;
 use Kczer\ExcelImporterBundle\Exception\Exporter\InvalidModelPropertyException;
 use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
+use function array_change_key_case;
 use function array_filter;
 use function current;
 
@@ -15,7 +16,7 @@ class ModelMetadata
     private $modelClassName;
 
     /** @var array<string, ModelPropertyMetadata> Keys are excel identifiers */
-    private $modelPropertiesMetadata;
+    private $modelPropertiesMetadata = [];
 
 
     public function getModelClassName(): string
@@ -59,11 +60,15 @@ class ModelMetadata
      */
     public function transformColumnKeyNameKeysToExcelColumnKeys(array $keyMappings): void
     {
+        $keyLoweredModelPropertiesMetadata = array_change_key_case($this->modelPropertiesMetadata);
         foreach ($keyMappings as $columnNameKey => $excelColumnKey) {
-            $this->modelPropertiesMetadata[$excelColumnKey] = $this->modelPropertiesMetadata[$columnNameKey];
-
-            unset($this->modelPropertiesMetadata[$columnNameKey]);
+            $this->modelPropertiesMetadata[$excelColumnKey] = $keyLoweredModelPropertiesMetadata[$columnNameKey];
         }
+        $this->modelPropertiesMetadata = array_diff_ukey(
+            $this->modelPropertiesMetadata,
+            $keyMappings,
+            'strcasecmp'
+        );
     }
 
     /**

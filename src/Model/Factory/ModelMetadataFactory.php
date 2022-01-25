@@ -50,7 +50,7 @@ class ModelMetadataFactory
      * @throws ReflectionException
      * @throws UnexpectedColumnExcelCellClassException
      */
-    public function createMetadataFromModelClass(string $modelClass, ?string $displayModelClass): array
+    public function createMetadataFromModelClass(string $modelClass, ?string $displayModelClass): ModelMetadata
     {
         $modelReflectionClass = $this->obtainModelReflectionClass($modelClass);
         $isDisplayModelClassDefined = null !== $displayModelClass;

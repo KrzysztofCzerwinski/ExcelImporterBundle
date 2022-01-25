@@ -6,7 +6,6 @@ namespace Kczer\ExcelImporterBundle\Importer;
 
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
-use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidDisplayModelSetterParameterTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\ModelPropertyNotSettableException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\NotExistingModelClassException;
@@ -24,8 +23,9 @@ use Kczer\ExcelImporterBundle\Model\Factory\ModelFactory;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 use Kczer\ExcelImporterBundle\Model\AbstractDisplayModel;
+use Kczer\ExcelImporterBundle\Util\FieldIdResolver;
 use ReflectionException;
-use Symfony\Contracts\Translation\TranslatorInterface;
+use function current;
 
 class ModelExcelImporter extends AbstractExcelImporter
 {
@@ -53,14 +53,14 @@ class ModelExcelImporter extends AbstractExcelImporter
 
     public function __construct
     (
-        TranslatorInterface $translator,
         ExcelCellFactory $excelCellFactory,
         ExcelRowFactory $excelRowFactory,
+        FieldIdResolver $fieldIdResolver,
         ModelMetadataFactory $modelMetadataFactory,
         ModelFactory $modelFactory
     )
     {
-        parent::__construct($translator, $excelCellFactory, $excelRowFactory);
+        parent::__construct($excelCellFactory, $excelRowFactory, $fieldIdResolver);
         $this->modelMetadataFactory = $modelMetadataFactory;
         $this->modelFactory = $modelFactory;
     }
@@ -102,6 +102,26 @@ class ModelExcelImporter extends AbstractExcelImporter
     {
         $this->displayModelClass = $displayModelClass;
         return $this;
+    }
+
+    /**
+     * @return object|null First model associated with the import or nul if no models are present
+     */
+    public function getFirstModel()
+    {
+        $models = $this->getModels();
+
+        return !empty($models) ? current($models) : null;
+    }
+
+    /**
+     * @return object|null First model associated with the import or nul if no models are present
+     */
+    public function getFirstDisplayModel()
+    {
+        $displayModels = $this->getDisplayModels();
+
+        return !empty($displayModels) ? current($displayModels) : null;
     }
 
 
@@ -154,7 +174,7 @@ class ModelExcelImporter extends AbstractExcelImporter
                 $propertyExcelColumn->getCellName(),
                 $columnKey,
                 $propertyExcelColumn->isRequired(),
-                !$propertyExcelColumn->isField(),
+                !$this->fieldIdResolver->isColumnKeyFieldIdentifier($propertyExcelColumn->getColumnKey()),
                 $propertyMetadata->getValidators()
             );
         }

@@ -10,6 +10,7 @@ use ReflectionMethod;
 use ReflectionProperty;
 use function array_filter;
 use function in_array;
+use function ucfirst;
 
 class ModelPropertyMetadata
 {
@@ -103,7 +104,7 @@ class ModelPropertyMetadata
         return $this->validators;
     }
 
-    public function setValidators(array $validators): ModelPropertyMetadata
+    public function setValidators(array $validators): self
     {
         $this->validators = $validators;
         return $this;
