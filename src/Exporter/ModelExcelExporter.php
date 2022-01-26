@@ -12,6 +12,9 @@ use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
 use Kczer\ExcelImporterBundle\Exception\Exporter\InvalidExcelImportException;
 use Kczer\ExcelImporterBundle\Exception\Exporter\InvalidModelPropertyException;
 use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
+use Kczer\ExcelImporterBundle\Exception\InvalidNamedColumnKeyException;
+use Kczer\ExcelImporterBundle\Exception\MissingExcelColumnsException;
+use Kczer\ExcelImporterBundle\Exception\MissingExcelFieldException;
 use Kczer\ExcelImporterBundle\Exception\TemporaryFileManager\FileAlreadyExistsException;
 use Kczer\ExcelImporterBundle\Exception\TemporaryFileManager\TemporaryFileCreationException;
 use Kczer\ExcelImporterBundle\Exception\UnexpectedDisplayModelClassException;
@@ -38,6 +41,7 @@ use function is_callable;
 use function key;
 use function range;
 use function reset;
+use function strtolower;
 use function ucfirst;
 
 class ModelExcelExporter
@@ -161,6 +165,9 @@ class ModelExcelExporter
      * @throws UnexpectedDisplayModelClassException
      * @throws UnexpectedExcelCellClassException
      * @throws Writer\Exception
+     * @throws InvalidNamedColumnKeyException
+     * @throws MissingExcelColumnsException
+     * @throws MissingExcelFieldException
      */
     public function exportAndMergeModelsToExistingFile(
         array  $models,
@@ -178,7 +185,7 @@ class ModelExcelExporter
         $this->assignBasicDataBasedOnModels($models);
 
         $modelExcelImporter = $this->modelExcelImporterFactory->createModelExcelImporter($this->modelClass);
-        $modelExcelImporter->parseExcelFile($excelFilePath, $namedColumnNames, $firstRowMode);
+        $modelExcelImporter->parseExcelFile($excelFilePath, null, $namedColumnNames, $firstRowMode);
         if ($modelExcelImporter->hasErrors()) {
 
             throw new InvalidExcelImportException($this->modelClass, $modelExcelImporter->getMergedAllErrorMessages());
@@ -256,7 +263,7 @@ class ModelExcelExporter
             return $this;
         }
         foreach ($rawModelsDataKeys as $index => $columnKey) {
-            $this->columnKeyMappings[$columnKey] = Coordinate::stringFromColumnIndex($index + 1);
+            $this->columnKeyMappings[strtolower($columnKey)] = Coordinate::stringFromColumnIndex($index + 1);
         }
 
         return $this;
@@ -265,6 +272,14 @@ class ModelExcelExporter
     private function assignRawModelsData(): self
     {
         $this->rawModelsData = array_map([$this->reverseExcelCellManager, 'reverseModelToRawPropertyModels'], $this->models);
+        if (null == $this->columnKeyMappings) {
+
+            return $this;
+        }
+
+        $this->rawModelsData = array_map(static function (array $rawCellValues): array {
+            return array_change_key_case($rawCellValues);
+        }, $this->rawModelsData);
 
         return $this;
     }

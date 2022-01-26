@@ -80,17 +80,4 @@ class ExcelRow
     {
         return implode($separator, $this->getAllErrorMessages($attachValues));
     }
-
-    /**
-     * @return string[] Key are column keys. Values are rawValues from EXCEL file
-     */
-    public function toArray(): array
-    {
-        $excelCells = [];
-        foreach ($this->excelCells as $columnKey => $excelCell) {
-            $excelCells[$columnKey] = (string)$excelCell->getRawValue();
-        }
-
-        return $excelCells;
-    }
 }

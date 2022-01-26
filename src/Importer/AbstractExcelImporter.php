@@ -31,7 +31,6 @@ use function array_map;
 use function array_search;
 use function array_slice;
 use function array_udiff;
-use function array_unshift;
 use function count;
 use function current;
 use function implode;
@@ -50,7 +49,6 @@ abstract class AbstractExcelImporter
     public const FIRST_ROW_MODE_DONT_SKIP = 2;
 
     public const FIRST_ROW_MODE_SKIP_IF_INVALID = 4;
-
 
     /** @var string[]|null
      *       Array with keys as human-readable column keys and values as EXCEL column keys with A-Z notation.
@@ -78,7 +76,7 @@ abstract class AbstractExcelImporter
      */
     private $fieldMappedExcelCellConfigurations = [];
 
-    /** @var ExcelRow[] */
+    /** @var array<int, string, ExcelRow> Keys are either EXCEL row numbers or model property values */
     private $excelRows = [];
 
     /** @var int|null */
@@ -127,7 +125,7 @@ abstract class AbstractExcelImporter
     }
 
     /**
-     * @return ExcelRow[]
+     * @return array<int|string, ExcelRow> Keys are either EXCEL row numbers or model property values
      */
     public function getExcelRows(): array
     {
@@ -240,15 +238,7 @@ abstract class AbstractExcelImporter
 
     public function getExcelRowsAsJson(): string
     {
-        $excelRows = array_map(static function (ExcelRow $excelRow): array {
-            return $excelRow->toArray();
-        }, $this->excelRows);
-
-        if (null !== $this->columnKeyMappings) {
-            array_unshift($excelRows, array_flip($this->columnKeyMappings));
-        }
-
-        return json_encode($excelRows);
+        return json_encode($this->rawExcelRows);
     }
 
     /**
@@ -296,11 +286,12 @@ abstract class AbstractExcelImporter
                 continue;
             }
             $skippedFirstRow = !$isFirstRow && $skippedFirstRow;
+
+            $this->excelRows[$rowKey] = $excelRow;
             if (null !== $this->indexByColumnKey) {
-                $this->excelRows[$rawCellValues[$this->indexByColumnKey]] = $excelRow;
-            } else {
-                $this->excelRows[] = $excelRow;
+                $this->modelIndexedExcelRows[$rawCellValues[$this->indexByColumnKey]] = $excelRow;
             }
+
         }
         if (null !== $this->rowRequirementsValidator) {
             ($this->rowRequirementsValidator)($this->excelRows);
