@@ -58,7 +58,7 @@ class ModelFactory
     ): array
     {
         $models = [];
-        foreach ($excelRows as $excelRow) {
+        foreach ($excelRows as $index => $excelRow) {
             $model = new $modelClass();
             $excelCells = $excelRow->getExcelCells();
             foreach ($modelMetadata->getModelPropertiesMetadata() as $columnKey => $modelPropertyMetadata) {
@@ -84,7 +84,7 @@ class ModelFactory
                     ->setValid(!$excelRow->hasErrors())
                 ;
             }
-            $models[] = $model;
+            $models[$index] = $model;
         }
 
         return $models;

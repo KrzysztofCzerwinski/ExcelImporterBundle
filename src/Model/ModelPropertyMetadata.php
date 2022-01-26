@@ -28,6 +28,9 @@ class ModelPropertyMetadata
     /** @var ExcelColumn|null */
     private $excelColumn;
 
+    /** @var string|null */
+    private $columnKey;
+
     /** @var string */
     private $propertyName;
 
@@ -63,6 +66,18 @@ class ModelPropertyMetadata
         return $this;
     }
 
+    public function getColumnKey(): ?string
+    {
+        return $this->columnKey;
+    }
+
+    public function setColumnKey(?string $columnKey): self
+    {
+        $this->columnKey = $columnKey;
+
+        return $this;
+    }
+
     public function getPropertyName(): string
     {
         return $this->propertyName;
@@ -84,16 +99,6 @@ class ModelPropertyMetadata
         $this->inDisplayModel = $inDisplayModel;
 
         return $this;
-    }
-
-    /**
-     * Determine whether property is mapped by excel column or by single excel field
-     *
-     * @return bool
-     */
-    public function hasColumnMapping(): bool
-    {
-        return !$this->getExcelColumn()->isField();
     }
 
     /**

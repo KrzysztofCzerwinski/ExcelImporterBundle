@@ -16,6 +16,7 @@ use Kczer\ExcelImporterBundle\Exception\EmptyModelClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelImportConfigurationException;
+use Kczer\ExcelImporterBundle\Exception\Exporter\InvalidModelPropertyException;
 use Kczer\ExcelImporterBundle\Exception\InvalidNamedColumnKeyException;
 use Kczer\ExcelImporterBundle\Exception\MissingExcelColumnsException;
 use Kczer\ExcelImporterBundle\Exception\MissingExcelFieldException;
@@ -138,11 +139,15 @@ class ModelExcelImporter extends AbstractExcelImporter
      * @throws UnexpectedExcelCellClassException
      * @throws InvalidNamedColumnKeyException
      * @throws MissingExcelFieldException
+     * @throws InvalidModelPropertyException
      */
-    protected function parseRawExcelRows(int $firstRowMode, bool $namedColumnKeys): void
+    protected function parseRawExcelRows(int $firstRowMode, ?string $indexBy, bool $namedColumnKeys): void
     {
         $this->modelMetadata = $this->modelMetadataFactory->createMetadataFromModelClass($this->getImportModelClass(), $this->displayModelClass);
-        parent::parseRawExcelRows($firstRowMode, $namedColumnKeys);
+        if (null !== $indexBy) {
+            $this->indexByColumnKey = $this->modelMetadata->getPropertyMetadataByName($indexBy)->getColumnKey();
+        }
+        parent::parseRawExcelRows($firstRowMode, $indexBy, $namedColumnKeys);
         if (null !== $this->columnKeyMappings) {
             $this->modelMetadata->transformColumnKeyNameKeysToExcelColumnKeys($this->columnKeyMappings);
         }

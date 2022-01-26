@@ -31,7 +31,6 @@ use function array_map;
 use function array_search;
 use function array_slice;
 use function array_udiff;
-use function array_uintersect;
 use function array_unshift;
 use function count;
 use function current;
@@ -41,6 +40,7 @@ use function json_encode;
 use function key;
 use function ksort;
 use function reset;
+use function strtolower;
 use function trim;
 
 abstract class AbstractExcelImporter
@@ -57,6 +57,11 @@ abstract class AbstractExcelImporter
      *       Null if no mapping is required
      */
     protected $columnKeyMappings = null;
+
+    /**
+     * @var string|null Excel identifier of indexBy property
+     */
+    protected $indexByColumnKey = null;
 
     /** @var array<int, array<string, string>> */
     private $rawExcelRows = [];
@@ -169,6 +174,7 @@ abstract class AbstractExcelImporter
 
     /**
      * @param string $jsonExcelRows
+     * @param string|null $indexBy Model property which values will be used as model keys
      * @param bool $namedColumnKeys TRUE if named column keys are used in model, FALSE otherwise
      *
      * @return $this
@@ -179,7 +185,7 @@ abstract class AbstractExcelImporter
      * @throws MissingExcelFieldException
      * @throws UnexpectedExcelCellClassException
      */
-    public function parseJson(string $jsonExcelRows, bool $namedColumnKeys = true): self
+    public function parseJson(string $jsonExcelRows, string $indexBy = null, bool $namedColumnKeys = true): self
     {
         $this->rawExcelRows = json_decode($jsonExcelRows, true);
         if (null === $this->rawExcelRows) {
@@ -188,13 +194,14 @@ abstract class AbstractExcelImporter
         }
         $this
             ->castRawExcelRowsString()
-            ->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP, $namedColumnKeys);
+            ->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP, $indexBy, $namedColumnKeys);
 
         return $this;
     }
 
     /**
      * @param string $excelFilePath
+     * @param string|null $indexBy Model property which values will be used as model keys
      * @param bool $namedColumnKeys TRUE if named column keys are used in model, FALSE otherwise
      * @param int $firstRowMode DEFINES what to do with the first EXCEL row. Possible values: <br>
      *                          AbstractExcelImporter::FIRST_ROW_MODE_SKIP <br>
@@ -209,7 +216,12 @@ abstract class AbstractExcelImporter
      * @throws MissingExcelFieldException
      * @throws UnexpectedExcelCellClassException
      */
-    public function parseExcelFile(string $excelFilePath, bool $namedColumnKeys = true, int $firstRowMode = self::FIRST_ROW_MODE_SKIP): self
+    public function parseExcelFile(
+        string $excelFilePath,
+        string $indexBy = null,
+        bool $namedColumnKeys = true,
+        int $firstRowMode = self::FIRST_ROW_MODE_SKIP
+    ): self
     {
         try {
             $sheet = IOFactory::load($excelFilePath)->getActiveSheet();
@@ -221,7 +233,7 @@ abstract class AbstractExcelImporter
 
         $this
             ->castRawExcelRowsString()
-            ->parseRawExcelRows($firstRowMode, $namedColumnKeys);
+            ->parseRawExcelRows($firstRowMode, $indexBy, $namedColumnKeys);
 
         return $this;
     }
@@ -245,7 +257,7 @@ abstract class AbstractExcelImporter
      * @throws MissingExcelFieldException
      * @throws InvalidNamedColumnKeyException
      */
-    protected function parseRawExcelRows(int $firstRowMode, bool $namedColumnKeys): void
+    protected function parseRawExcelRows(int $firstRowMode, ?string $indexBy, bool $namedColumnKeys): void
     {
         $this->configureExcelCells();
         if ($namedColumnKeys) {
@@ -254,6 +266,7 @@ abstract class AbstractExcelImporter
                 ->resolvePreHeaderFieldMappedRows()
                 ->filterPreHeaderRows()
                 ->transformExcelCellConfigurationsKeys()
+                ->transformIndexByColumnKey()
             ;
         } else {
             $this->validateColumnIdentifiers();
@@ -283,8 +296,11 @@ abstract class AbstractExcelImporter
                 continue;
             }
             $skippedFirstRow = !$isFirstRow && $skippedFirstRow;
-
-            $this->excelRows[] = $excelRow;
+            if (null !== $this->indexByColumnKey) {
+                $this->excelRows[$rawCellValues[$this->indexByColumnKey]] = $excelRow;
+            } else {
+                $this->excelRows[] = $excelRow;
+            }
         }
         if (null !== $this->rowRequirementsValidator) {
             ($this->rowRequirementsValidator)($this->excelRows);
@@ -372,11 +388,7 @@ abstract class AbstractExcelImporter
             throw new InvalidNamedColumnKeyException(current($fieldIdLikeColumnKeys));
         }
 
-        $this->columnKeyMappings = array_flip(array_uintersect(
-            $headerRow,
-            array_keys($this->columnMappedExcelCellConfigurations),
-            'strcasecmp'
-        ));
+        $this->columnKeyMappings = array_flip(array_intersect($headerRow, $columnKeys));
 
         return $this;
     }
@@ -398,7 +410,7 @@ abstract class AbstractExcelImporter
         return $this;
     }
 
-    private function transformExcelCellConfigurationsKeys(): void
+    private function transformExcelCellConfigurationsKeys(): self
     {
         $keyLoweredExcelCellConfigurations = array_change_key_case($this->columnMappedExcelCellConfigurations);
         foreach ($this->columnKeyMappings ?? [] as $columnKeyName => $excelColumnKey) {
@@ -409,6 +421,18 @@ abstract class AbstractExcelImporter
             $keyLoweredExcelCellConfigurations,
             'strcasecmp'
         );
+
+        return $this;
+    }
+
+    private function transformIndexByColumnKey(): void
+    {
+        if (null === $this->indexByColumnKey) {
+
+            return;
+        }
+
+        $this->indexByColumnKey = $this->columnKeyMappings[strtolower($this->indexByColumnKey)];
     }
 
     /**

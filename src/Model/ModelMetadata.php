@@ -71,21 +71,33 @@ class ModelMetadata
         );
     }
 
+
     /**
      * @throws InvalidModelPropertyException
      * @throws NotGettablePropertyException
      */
     public function getPropertyGetterName(string $propertyName): string
     {
-        /** @var ModelPropertyMetadata|false $modelPropertyMetadata */
-        $modelPropertyMetadata = current(array_filter($this->modelPropertiesMetadata, static function (ModelPropertyMetadata $modelPropertyMetadata) use ($propertyName): bool {
-            return $modelPropertyMetadata->getPropertyName() === $propertyName;
-        }));
+        return $this->getPropertyMetadataByName($propertyName)->getFirstDefinedGetterName();
+    }
+
+    /**
+     * @throws InvalidModelPropertyException
+     */
+    public function getPropertyMetadataByName(string $propertyName): ModelPropertyMetadata
+    {
+        $modelPropertyMetadata = current(
+            array_filter(
+                $this->modelPropertiesMetadata,
+                static function (ModelPropertyMetadata $modelPropertyMetadata) use ($propertyName): bool {
+                    return $modelPropertyMetadata->getPropertyName() === $propertyName;
+                })
+        );
         if (false === $modelPropertyMetadata) {
 
             throw new InvalidModelPropertyException($propertyName, $this->getModelClassName());
         }
 
-        return $modelPropertyMetadata->getFirstDefinedGetterName();
+        return $modelPropertyMetadata;
     }
 }

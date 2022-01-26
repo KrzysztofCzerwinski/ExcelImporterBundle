@@ -64,9 +64,11 @@ class ModelMetadataFactory
                 continue;
             }
             $isPropertyInDisplayModel = $isDisplayModelClassDefined && $displayModelReflectionClass->hasProperty($reflectionProperty->getName());
+            $columnKey = $this->translator->trans($excelColumn->getColumnKey());
             $modelPropertyMetadata = (new ModelPropertyMetadata())
                 ->setReflectionProperty($reflectionProperty)
                 ->setExcelColumn($excelColumn)
+                ->setColumnKey($columnKey)
                 ->setPropertyName($reflectionProperty->getName())
                 ->setInDisplayModel($isPropertyInDisplayModel)
                 ->setValidators($this->getPropertyValidators($reflectionProperty))
@@ -83,7 +85,7 @@ class ModelMetadataFactory
                 ;
             }
 
-            $modelMetadata->addModelPropertyMetadata($this->translator->trans($excelColumn->getColumnKey()), $modelPropertyMetadata);
+            $modelMetadata->addModelPropertyMetadata($columnKey, $modelPropertyMetadata);
         }
 
         return $modelMetadata;
