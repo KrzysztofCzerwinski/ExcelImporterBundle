@@ -9,6 +9,7 @@ excel_importer:
       dictionary_value_not_found: Value not found in the dictionary
       regex_validator_default_message: Value must match the pattern "%pattern%"
       length_validator_default_message: "{0}Value's max length is %maxLength% |]0,Inf] Value's length must be between %minLength% and %maxLength%'"
+      unique_validator_default_message: "Columns set %fields% must be unique. Non unique data sets: %nonUniqueValues%"
   excel_cell:
     bool:
       true_display_value: YES

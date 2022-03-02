@@ -40,6 +40,11 @@ class ExcelRow
         $this->rowRelatedErrorMessages = array_merge($errorMessage, $this->rowRelatedErrorMessages);
     }
 
+    public function getExcelCellDisplayValue(string $columnKey): string
+    {
+        $this->excelCells[$columnKey]->getDisplayValue();
+    }
+
     /**
      * @param bool $attachValues Whether to add value info to the messages
      *

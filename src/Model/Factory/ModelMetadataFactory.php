@@ -7,7 +7,7 @@ use Doctrine\Common\Annotations\AnnotationReader;
 use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
 use Kczer\ExcelImporterBundle\Annotation\Validator\AbstractExcelColumnValidator;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidDisplayModelSetterParameterTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\ModelPropertyNotSettableException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\NotExistingModelClassException;
@@ -148,14 +148,14 @@ class ModelMetadataFactory
 
         $reflectionSetterParameterType = false !== $reflectionSetterParameter ? $reflectionSetterParameter->getType() : null;
         $reflectionSetterParameterTypeName = null !== $reflectionSetterParameterType ? $reflectionSetterParameterType->getName() : 'string';
-        if('string' !== $reflectionSetterParameterTypeName) {
+        if ('string' !== $reflectionSetterParameterTypeName) {
 
             throw new InvalidDisplayModelSetterParameterTypeException($modelReflectionClass->getName(), $setterReflection->getName(), $reflectionSetterParameter->getName(), $reflectionSetterParameterTypeName);
         }
     }
 
     /**
-     * @return AbstractValidator[]
+     * @return AbstractCellValidator[]
      */
     private function getPropertyValidators(ReflectionProperty $reflectionProperty): array
     {
@@ -165,7 +165,7 @@ class ModelMetadataFactory
             return $annotation instanceof AbstractExcelColumnValidator;
         });
 
-        return array_map(static function (AbstractExcelColumnValidator $excelColumnValidator): AbstractValidator {
+        return array_map(static function (AbstractExcelColumnValidator $excelColumnValidator): AbstractCellValidator {
 
             return $excelColumnValidator->getRelatedValidator();
         }, $excelColumnValidatorAnnotations);

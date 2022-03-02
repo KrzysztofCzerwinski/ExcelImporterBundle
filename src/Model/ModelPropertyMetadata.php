@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Kczer\ExcelImporterBundle\Model;
 
 use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
 use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -34,7 +34,7 @@ class ModelPropertyMetadata
     /** @var bool */
     private $inDisplayModel = true;
 
-    /** @var AbstractValidator[] */
+    /** @var AbstractCellValidator[] */
     private $validators;
 
     /**
@@ -87,17 +87,7 @@ class ModelPropertyMetadata
     }
 
     /**
-     * Determine whether property is mapped by excel column or by single excel field
-     *
-     * @return bool
-     */
-    public function hasColumnMapping(): bool
-    {
-        return !$this->getExcelColumn()->isField();
-    }
-
-    /**
-     * @return AbstractValidator[]
+     * @return AbstractCellValidator[]
      */
     public function getValidators(): array
     {

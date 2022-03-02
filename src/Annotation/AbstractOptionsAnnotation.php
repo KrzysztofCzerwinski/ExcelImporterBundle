@@ -87,9 +87,7 @@ abstract class AbstractOptionsAnnotation
     private function validateOptionTypes(array $options): void
     {
         $supportedOptions = $this->getSupportedOptions();
-        /**
-         * @var array<string, array{mixed, string}> $optionsTypeData
-         */
+        /** @var array<string, array{mixed, string}> $optionsTypeData */
         $optionsTypeData = !empty($options) ? array_merge_recursive($options, $supportedOptions) : [];
         $unsupportedExpectedTypes = array_diff($supportedOptions, self::SUPPORTED_OPTION_EXPECTED_DATA_TYPES);
         if (!empty($unsupportedExpectedTypes)) {

@@ -7,7 +7,7 @@ namespace Kczer\ExcelImporterBundle\Importer;
 
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Configuration\ExcelCellConfiguration;
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelRow;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
@@ -18,6 +18,7 @@ use Kczer\ExcelImporterBundle\Exception\InvalidNamedColumnKeyException;
 use Kczer\ExcelImporterBundle\Exception\JsonExcelRowsLoadException;
 use Kczer\ExcelImporterBundle\Exception\MissingExcelColumnsException;
 use Kczer\ExcelImporterBundle\Exception\MissingExcelFieldException;
+use Kczer\ExcelImporterBundle\Importer\Validator\AbstractImportValidator;
 use Kczer\ExcelImporterBundle\Model\ExcelRowsMetadata;
 use Kczer\ExcelImporterBundle\Model\Factory\ExcelRowsMetadataFactory;
 use Kczer\ExcelImporterBundle\Util\FieldIdResolver;
@@ -52,7 +53,7 @@ abstract class AbstractExcelImporter
     public const FIRST_ROW_MODE_SKIP_IF_INVALID = 4;
 
 
-    /** @var string[]|null
+    /** @var array<string, string>|null
      *       Array with keys as human-readable column keys and values as EXCEL column keys with A-Z notation.
      *       Null if no mapping is required
      */
@@ -82,7 +83,6 @@ abstract class AbstractExcelImporter
     /** @var ExcelRowsMetadata */
     private $excelRowsMetadata;
 
-
     /** @var ?callable */
     private $rowRequirementsValidator = null;
 
@@ -95,14 +95,16 @@ abstract class AbstractExcelImporter
     /** @var ExcelRowFactory */
     private $excelRowFactory;
 
+    /** @var array<class-string<AbstractImportValidator>, string> */
+    protected $importRelateErrorMessages = [];
+
 
 
     public function __construct(
         ExcelCellFactory    $excelCellFactory,
         ExcelRowFactory     $excelRowFactory,
         FieldIdResolver     $fieldIdResolver
-    )
-    {
+    ) {
         $this->excelCellFactory = $excelCellFactory;
         $this->excelRowFactory = $excelRowFactory;
         $this->fieldIdResolver = $fieldIdResolver;
@@ -135,6 +137,14 @@ abstract class AbstractExcelImporter
     }
 
     /**
+     * @return array<class-string<AbstractImportValidator>, string> Keys are validation class names, values are error messages
+     */
+    public function getImportRelateErrorMessages(): array
+    {
+        return $this->importRelateErrorMessages;
+    }
+
+    /**
      * @throws UnexpectedExcelCellClassException
      */
     protected abstract function configureExcelCells(): self;
@@ -142,12 +152,14 @@ abstract class AbstractExcelImporter
 
     public function hasErrors(): bool
     {
-        return in_array(
-            true,
-            array_map(static function (ExcelRow $excelCell): bool {
-                return $excelCell->hasErrors();
-            }, $this->excelRows)
-        );
+        return
+            !empty($this->importRelateErrorMessages) ||
+            in_array(
+                true,
+                array_map(static function (ExcelRow $excelRow): bool {
+                    return $excelRow->hasErrors();
+                }, $this->excelRows)
+            );
     }
 
     /**
@@ -160,9 +172,12 @@ abstract class AbstractExcelImporter
         return implode(
             $separator,
             array_filter(
-                array_map(static function (ExcelRow $excelRow): string {
-                    return $excelRow->getMergedAllErrorMessages(true);
-                }, $this->excelRows)
+                array_merge(
+                    $this->importRelateErrorMessages,
+                    array_map(static function (ExcelRow $excelRow): string {
+                        return $excelRow->getMergedAllErrorMessages(true);
+                    }, $this->excelRows)
+                )
             )
         );
     }
@@ -196,7 +211,7 @@ abstract class AbstractExcelImporter
     /**
      * @param string $excelFilePath
      * @param bool $namedColumnKeys TRUE if named column keys are used in model, FALSE otherwise
-     * @param int $firstRowMode DEFINES what to do with the first EXCEL row. Possible values: <br>
+     * @param int $firstRowMode Defines what to do with the first EXCEL row. Possible values: <br>
      *                          AbstractExcelImporter::FIRST_ROW_MODE_SKIP <br>
      *                          AbstractExcelImporter::FIRST_ROW_MODE_DONT_SKIP <br>
      *                          AbstractExcelImporter::FIRST_ROW_MODE_SKIP_IF_INVALID <br>
@@ -221,7 +236,8 @@ abstract class AbstractExcelImporter
 
         $this
             ->castRawExcelRowsString()
-            ->parseRawExcelRows($firstRowMode, $namedColumnKeys);
+            ->parseRawExcelRows($firstRowMode, $namedColumnKeys)
+        ;
 
         return $this;
     }
@@ -298,7 +314,7 @@ abstract class AbstractExcelImporter
      * @param string $columnIdentifier Column key in EXCEL file
      * @param bool $cellRequired Whether cell value is required in an EXCEL file
      * @param bool $isColumn Whether cell value is taken from column in current row. static field otherwise
-     * @param AbstractValidator[] $validators Validators extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator that will validate raw value
+     * @param AbstractCellValidator[] $cellValidators Validators extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator that will validate raw value
      *
      * @return AbstractExcelImporter
      *
@@ -310,7 +326,7 @@ abstract class AbstractExcelImporter
         string $columnIdentifier,
         bool   $cellRequired = true,
         bool   $isColumn = true,
-        array  $validators = []
+        array $cellValidators = []
     ): self
     {
         $excelCellConfiguration = new ExcelCellConfiguration(
@@ -318,7 +334,7 @@ abstract class AbstractExcelImporter
             $cellName,
             $cellRequired,
             $isColumn,
-            $validators
+            $cellValidators
         );
 
         if (!$isColumn) {

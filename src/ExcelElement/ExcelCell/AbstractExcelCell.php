@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell;
 
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use function trim;
 
@@ -24,7 +24,7 @@ abstract class AbstractExcelCell
     /** @var bool */
     protected $required;
 
-    /** @var AbstractValidator[] */
+    /** @var AbstractCellValidator[] */
     private $validators = [];
 
     /** @var bool */
@@ -76,7 +76,7 @@ abstract class AbstractExcelCell
     }
 
     /**
-     * @return AbstractValidator[]
+     * @return AbstractCellValidator[]
      */
     public function getValidators(): array
     {
@@ -84,7 +84,7 @@ abstract class AbstractExcelCell
     }
 
     /**
-     * @param AbstractValidator[] $validators
+     * @param AbstractCellValidator[] $validators
      */
     public function setValidators(array $validators): self
     {

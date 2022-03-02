@@ -5,7 +5,7 @@ namespace Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator;
 
 use function strlen;
 
-class LengthValidator extends AbstractValidator
+class LengthCellValidator extends AbstractCellValidator
 {
     /** @var int */
     private $minLength;
