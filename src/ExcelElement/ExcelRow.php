@@ -40,9 +40,17 @@ class ExcelRow
         $this->rowRelatedErrorMessages = array_merge($errorMessage, $this->rowRelatedErrorMessages);
     }
 
-    public function getExcelCellDisplayValue(string $columnKey): string
+    public function getExcelCellRawValue(string $columnKey): ?string
     {
-        $this->excelCells[$columnKey]->getDisplayValue();
+        return $this->excelCells[$columnKey]->getRawValue();
+    }
+
+    /**
+     * @return mixed|null
+     */
+    public function getExcelCellValue(string $columnKey)
+    {
+        return $this->excelCells[$columnKey]->getValue();
     }
 
     /**

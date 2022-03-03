@@ -63,7 +63,7 @@ class UniqueModelValidator extends AbstractImportValidator
 
         $values = [];
         foreach ($excelRows as $excelRow) {
-            $currentValues = array_map([$excelRow, 'getExcelCellDisplayValue'], $propertyColumnKeyMappings);
+            $currentValues = array_map([$excelRow, 'getExcelCellRawValue'], $propertyColumnKeyMappings);
             if (!in_array($currentValues, $values, true)) {
                 $values[] = $currentValues;
 

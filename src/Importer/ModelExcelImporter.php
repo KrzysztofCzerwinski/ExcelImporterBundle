@@ -173,6 +173,7 @@ class ModelExcelImporter extends AbstractExcelImporter
                 $this->modelMetadata
             );
         }
+        $this->validateImport();
     }
 
     /**
