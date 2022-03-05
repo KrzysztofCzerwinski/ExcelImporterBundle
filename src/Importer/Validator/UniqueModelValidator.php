@@ -51,8 +51,8 @@ class UniqueModelValidator extends AbstractImportValidator
     public function isImportValid(array $excelRows, ModelMetadata $modelMetadata): bool
     {
         $propertyColumnKeyMappings = array_intersect_key(
-            array_flip($this->fields),
             $this->getPropertyExcelColumnKeyMappings($modelMetadata),
+            array_flip($this->fields)
         );
 
         $unmappedProperties = array_diff($this->fields, array_keys($propertyColumnKeyMappings));
