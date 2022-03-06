@@ -165,6 +165,7 @@ class ModelExcelImporter extends AbstractExcelImporter
         if (null !== $this->columnKeyMappings) {
             $this->modelMetadata->transformColumnKeyNameKeysToExcelColumnKeys($this->columnKeyMappings);
         }
+        $this->validators = $this->importValidatorFactory->createFromImportModelClass($this->getImportModelClass());
         $this->models = $this->modelFactory->createImportedAssociatedModelsFromExcelRowsAndModelMetadata(
             $this->getImportModelClass(),
             $this->modelIndexedExcelRows,
