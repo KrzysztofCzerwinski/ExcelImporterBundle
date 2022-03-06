@@ -20,13 +20,17 @@ use Kczer\ExcelImporterBundle\Exception\Exporter\InvalidModelPropertyException;
 use Kczer\ExcelImporterBundle\Exception\InvalidNamedColumnKeyException;
 use Kczer\ExcelImporterBundle\Exception\MissingExcelColumnsException;
 use Kczer\ExcelImporterBundle\Exception\MissingExcelFieldException;
+use Kczer\ExcelImporterBundle\Importer\Validator\AbstractImportValidator;
+use Kczer\ExcelImporterBundle\Importer\Validator\Factory\ImportValidatorFactory;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelFactory;
 use Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 use Kczer\ExcelImporterBundle\Model\AbstractDisplayModel;
 use Kczer\ExcelImporterBundle\Util\FieldIdResolver;
 use ReflectionException;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use function current;
+use function get_class;
 
 class ModelExcelImporter extends AbstractExcelImporter
 {
@@ -45,6 +49,9 @@ class ModelExcelImporter extends AbstractExcelImporter
     /** @var AbstractDisplayModel[] */
     private $displayModels = [];
 
+    /** @var AbstractImportValidator[] */
+    private $validators = [];
+
 
     /** @var ModelMetadataFactory */
     private $modelMetadataFactory;
@@ -52,20 +59,27 @@ class ModelExcelImporter extends AbstractExcelImporter
     /** @var ModelFactory */
     private $modelFactory;
 
-    public function __construct
-    (
-        ExcelCellFactory $excelCellFactory,
-        ExcelRowFactory $excelRowFactory,
-        FieldIdResolver $fieldIdResolver,
-        ModelMetadataFactory $modelMetadataFactory,
-        ModelFactory $modelFactory
-    )
-    {
+    /** @var ImportValidatorFactory */
+    private $importValidatorFactory;
+
+    /** @var TranslatorInterface */
+    private $translator;
+
+    public function __construct (
+        ExcelCellFactory       $excelCellFactory,
+        ExcelRowFactory        $excelRowFactory,
+        FieldIdResolver        $fieldIdResolver,
+        ModelMetadataFactory   $modelMetadataFactory,
+        ModelFactory           $modelFactory,
+        ImportValidatorFactory $importValidatorFactory,
+        TranslatorInterface    $translator
+    ) {
         parent::__construct($excelCellFactory, $excelRowFactory, $fieldIdResolver);
         $this->modelMetadataFactory = $modelMetadataFactory;
         $this->modelFactory = $modelFactory;
+        $this->importValidatorFactory = $importValidatorFactory;
+        $this->translator = $translator;
     }
-
 
     /**
      * @return object[] Array of models associated with ModelClass
@@ -108,7 +122,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     /**
      * @return object|null First model associated with the import or nul if no models are present
      */
-    public function getFirstModel()
+    public function getFirstModel(): ?object
     {
         $models = $this->getModels();
 
@@ -118,7 +132,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     /**
      * @return object|null First model associated with the import or nul if no models are present
      */
-    public function getFirstDisplayModel()
+    public function getFirstDisplayModel(): ?object
     {
         $displayModels = $this->getDisplayModels();
 
@@ -163,9 +177,12 @@ class ModelExcelImporter extends AbstractExcelImporter
                 $this->modelMetadata
             );
         }
+        $this->validateImport();
     }
 
     /**
+     * @return $this
+     *
      * @throws ExcelImportConfigurationException
      * @throws UnexpectedClassException
      */
@@ -185,5 +202,18 @@ class ModelExcelImporter extends AbstractExcelImporter
         }
 
         return $this;
+    }
+
+    private function validateImport(): void
+    {
+        foreach ($this->validators as $validator) {
+            $isValid = $validator->isImportValid($this->getExcelRows(), $this->modelMetadata);
+            if ($isValid) {
+
+                continue;
+            }
+            $this->importRelateErrorMessages[get_class($validator)] =
+                $this->translator->trans(...$validator->getMessageWithParams());
+        }
     }
 }

@@ -3,16 +3,17 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Annotation\Validator;
 
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\RegexValidator;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\RegexCellValidator;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidRegexExpressionException;
+use Kczer\ExcelImporterBundle\Importer\Validator\AbstractValidator;
 use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class Regex extends AbstractExcelColumnValidator
+class Regex extends AbstractExcelValidator
 {
     /**
      * @Required
@@ -26,18 +27,18 @@ class Regex extends AbstractExcelColumnValidator
      */
     public function __construct(array $annotationData)
     {
-        parent::__construct($annotationData + ['message' => RegexValidator::getDefaultMessage()]);
+        parent::__construct($annotationData + ['message' => RegexCellValidator::getDefaultMessage()]);
 
         $this->pattern = $annotationData['pattern'];
     }
 
     /**
-     * @return RegexValidator
+     * @return RegexCellValidator
      *
      * @throws InvalidRegexExpressionException
      */
     public function getRelatedValidator(): AbstractValidator
     {
-        return new RegexValidator($this->message, $this->pattern);
+        return new RegexCellValidator($this->message, $this->pattern);
     }
 }

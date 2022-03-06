@@ -10,8 +10,6 @@ use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedAnnotationOptionExc
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionExpectedDataTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionValueDataTypeException;
 use function is_bool;
-use function preg_match;
-use function trim;
 
 /**
  * @Annotation
@@ -56,7 +54,7 @@ class ExcelColumn extends AbstractOptionsAnnotation
 
 
     /**
-     * @param array{cellName: string, targetExcelCellClass: string, required: bool, columnKey: string, options: array} $annotationData
+     * @param array{cellName: string, targetExcelCellClass: string, required: bool, columnKey: string|null, value: string|null, options: array} $annotationData
      *
      * @throws InvalidAnnotationParamException
      * @throws UnexpectedAnnotationOptionException
@@ -72,7 +70,7 @@ class ExcelColumn extends AbstractOptionsAnnotation
             throw new InvalidAnnotationParamException('required', static::class, $required, 'bool');
         }
         $this->targetExcelCellClass = $annotationData['targetExcelCellClass'];
-        $this->columnKey = $annotationData['columnKey'];
+        $this->columnKey = $annotationData['columnKey'] ?? $annotationData['value'];
         $this->cellName = $annotationData['cellName'] ?? '';
         $this->required = $required;
     }

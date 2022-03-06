@@ -3,15 +3,15 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Annotation\Validator;
 
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractValidator;
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\LengthValidator;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\LengthCellValidator;
+use Kczer\ExcelImporterBundle\Importer\Validator\AbstractValidator;
 use Symfony\Contracts\Service\Attribute\Required;
 
 /**
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class Length extends AbstractExcelColumnValidator
+class Length extends AbstractExcelValidator
 {
     /** @var int */
     private $minLength;
@@ -28,17 +28,17 @@ class Length extends AbstractExcelColumnValidator
      */
     public function __construct(array $annotationData)
     {
-        parent::__construct($annotationData + ['message' => LengthValidator::getDefaultMessage()]);
+        parent::__construct($annotationData + ['message' => LengthCellValidator::getDefaultMessage()]);
 
         $this->minLength = $annotationData['minLength'] ?? 0;
         $this->maxLength = $annotationData['maxLength'];
     }
 
     /**
-     * @return LengthValidator
+     * @return LengthCellValidator
      */
     public function getRelatedValidator(): AbstractValidator
     {
-        return new LengthValidator($this->message, $this->maxLength, $this->minLength);
+        return new LengthCellValidator($this->message, $this->maxLength, $this->minLength);
     }
 }

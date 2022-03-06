@@ -8,7 +8,7 @@ use function preg_match;
 use function sprintf;
 use function trim;
 
-class RegexValidator extends AbstractValidator
+class RegexCellValidator extends AbstractCellValidator
 {
     /** @var string */
     private $pattern;
