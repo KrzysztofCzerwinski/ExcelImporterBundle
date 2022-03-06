@@ -263,11 +263,13 @@ abstract class AbstractExcelImporter
      */
     protected function parseRawExcelRows(int $firstRowMode, bool $namedColumnKeys): void
     {
-        $this->configureExcelCells();
+        $this
+            ->configureExcelCells()
+            ->resolvePreHeaderFieldMappedRows()
+        ;
         if ($namedColumnKeys) {
             $this
                 ->getColumnKeyNameExcelColumnKeyMappings()
-                ->resolvePreHeaderFieldMappedRows()
                 ->filterPreHeaderRows()
                 ->transformExcelCellConfigurationsKeys()
             ;
