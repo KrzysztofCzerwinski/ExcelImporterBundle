@@ -7,6 +7,7 @@ namespace Kczer\ExcelImporterBundle\Importer;
 
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Configuration\ExcelCellConfiguration;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelRow;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelRowFactory;
@@ -78,7 +79,7 @@ abstract class AbstractExcelImporter
      */
     private $fieldMappedExcelCellConfigurations = [];
 
-    /** @var array<int, string, ExcelRow> Keys are either EXCEL row numbers or model property values */
+    /** @var array<int, ExcelRow>*/
     private $excelRows = [];
 
     /** @var int|null */
@@ -102,7 +103,8 @@ abstract class AbstractExcelImporter
     /** @var array<class-string<AbstractImportValidator>, string> */
     protected $importRelateErrorMessages = [];
 
-
+    /** @var array<string|int, ExcelRow> Keys are either EXCEL row numbers or model property values */
+    protected $modelIndexedExcelRows = [];
 
     public function __construct(
         ExcelCellFactory    $excelCellFactory,
@@ -309,6 +311,8 @@ abstract class AbstractExcelImporter
             $this->excelRows[$rowKey] = $excelRow;
             if (null !== $this->indexByColumnKey) {
                 $this->modelIndexedExcelRows[$rawCellValues[$this->indexByColumnKey]] = $excelRow;
+            } else {
+                $this->modelIndexedExcelRows[$rowKey] = $excelRow;
             }
 
         }

@@ -167,13 +167,13 @@ class ModelExcelImporter extends AbstractExcelImporter
         }
         $this->models = $this->modelFactory->createImportedAssociatedModelsFromExcelRowsAndModelMetadata(
             $this->getImportModelClass(),
-            $this->getExcelRows(),
+            $this->modelIndexedExcelRows,
             $this->modelMetadata
         );
         if (null !== $this->displayModelClass) {
             $this->displayModels = $this->modelFactory->createDisplayModelsFromExcelRowsAndModelMetadata(
                 $this->displayModelClass,
-                $this->getExcelRows(),
+                $this->modelIndexedExcelRows,
                 $this->modelMetadata
             );
         }
