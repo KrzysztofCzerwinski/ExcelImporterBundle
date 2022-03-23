@@ -12,7 +12,9 @@
         "symfony/config": "^3.3 | ^4.0",
         "symfony/http-kernel": "^3.3 | ^4.0",
         "symfony/yaml": "^4.0",
-        "symfony/translation": "^4.0"
+        "symfony/translation": "^4.0",
+        "symfony/console": "4.4.*",
+        "symfony/twig-bundle": "4.4.*"
     },
     "license": "MIT",
     "autoload": {
@@ -21,6 +23,7 @@
         }
     },
     "require-dev": {
-        "symfony/framework-bundle": "^4.3"
+        "symfony/framework-bundle": "^4.3",
+        "symfony/test-pack": "^1.0"
     }
 }

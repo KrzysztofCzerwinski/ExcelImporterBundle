@@ -81,3 +81,8 @@ services:
   Kczer\ExcelImporterBundle\Util\FieldIdResolver:
 
   Kczer\ExcelImporterBundle\Importer\Validator\Factory\ImportValidatorFactory:
+
+  Kczer\ExcelImporterBundle\Command\MakeModelCommand:
+    public: true
+    arguments:
+      $translator: '@translator'
