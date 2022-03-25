@@ -13,11 +13,13 @@ use Throwable;
 class ModelFactory
 {
     /**
-     * @param string $modelClass
+     * @template T
+     *
+     * @param class-string<T> $modelClass
      * @param ExcelRow[] $excelRows
      * @param ModelMetadata $modelMetadata
      *
-     * @return object[] Array of models associated with ModelImport class
+     * @return T[] Array of models associated with ModelImport class
      *
      * @throws SetterNotCompatibleWithExcelCellValueException
      */
@@ -27,7 +29,7 @@ class ModelFactory
     }
 
     /**
-     * @param class-string $displayModelClass
+     * @param class-string<AbstractDisplayModel> $displayModelClass
      * @param ExcelRow[] $excelRows
      * @param ModelMetadata $modelMetadata
      *
@@ -41,12 +43,14 @@ class ModelFactory
     }
 
     /**
-     * @param class-string $modelClass
+     * @template T
+     *
+     * @param class-string<T> $modelClass
      * @param ExcelRow[] $excelRows
      * @param ModelMetadata $modelMetadata
      * @param bool $createDisplayModel
      *
-     * @return array|AbstractDisplayModel[] Array of display models associated with ModelImport class
+     * @return T[] Array of (display) models associated with ModelImport class
      *
      * @throws SetterNotCompatibleWithExcelCellValueException
      */

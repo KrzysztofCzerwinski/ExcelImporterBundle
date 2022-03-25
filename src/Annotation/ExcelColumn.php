@@ -87,6 +87,9 @@ class ExcelColumn extends AbstractOptionsAnnotation
         return $this->cellName;
     }
 
+    /**
+     * @return class-string<AbstractExcelCell>
+     */
     public function getTargetExcelCellClass(): string
     {
         return $this->targetExcelCellClass;
@@ -95,6 +98,13 @@ class ExcelColumn extends AbstractOptionsAnnotation
     public function getColumnKey(): string
     {
         return $this->columnKey;
+    }
+
+    public function setColumnKey($columnKey)
+    {
+        $this->columnKey = $columnKey;
+
+        return $this;
     }
 
     public function isRequired(): bool

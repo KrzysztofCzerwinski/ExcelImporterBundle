@@ -1,0 +1,37 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ modelClass|namespace }};
+
+{% block imports %}
+{% for importClass in importClasses %}
+use {{ importClass }};
+{% endfor %}
+{% endblock %}
+
+{% block model_class %}
+class {{ modelClass|short_name }} extends AbstractDisplayModel
+{{ '{' }}
+{% for propertyMetadata in modelMetadata.modelPropertiesMetadata|filter(propertyMetadata => propertyMetadata.inDisplayModel) %}
+    /** @var string */
+    private ${{ propertyMetadata.propertyName }};
+
+{% endfor %}
+{% for propertyMetadata in modelMetadata.modelPropertiesMetadata|filter(propertyMetadata => propertyMetadata.inDisplayModel) %}
+    public function {{ propertyMetadata.getterName }}(): string
+    {{ '{' }}
+        return $this->{{ propertyMetadata.propertyName }};
+    {{ '}' }}
+
+    public function {{ propertyMetadata.setterName }}(string ${{ propertyMetadata.propertyName }}): self
+    {{ '{' }}
+        $this->{{ propertyMetadata.propertyName }} = ${{ propertyMetadata.propertyName }};
+
+        return $this;
+    {{ '}' }}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}
+{{ '}' }}
+{% endblock %}
