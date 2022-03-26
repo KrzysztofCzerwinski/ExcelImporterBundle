@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Kczer\ExcelImporterBundle\DependencyInjection;
 
 use Exception;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -31,6 +32,8 @@ class KczerExcelImporterExtension extends Extension implements PrependExtensionI
         $container->setParameter('excel_cell.bool.true_values', $config['excel_cell']['bool']['true_values']);
         $container->setParameter('excel_cell.bool.false_values', $config['excel_cell']['bool']['false_values']);
         $container->setParameter('excel_cell.bool.empty_as_false', $config['excel_cell']['bool']['empty_as_false']);
+
+        $container->registerForAutoconfiguration(AbstractExcelCell::class)->addTag('excel_importer.excel_cell');
     }
 
     public function prepend(ContainerBuilder $container)
