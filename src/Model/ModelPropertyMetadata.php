@@ -6,6 +6,7 @@ namespace Kczer\ExcelImporterBundle\Model;
 use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
 use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
+use ReflectionException;
 use ReflectionMethod;
 use ReflectionProperty;
 use function array_filter;
@@ -22,7 +23,7 @@ class ModelPropertyMetadata
 
     public const SETTER_PREFIX = 'set';
 
-    /** @var ReflectionProperty */
+    /** @var ReflectionProperty|null */
     private $reflectionProperty;
 
     /** @var ExcelColumn|null */
@@ -40,20 +41,12 @@ class ModelPropertyMetadata
     /** @var AbstractCellValidator[] */
     private $validators;
 
-    /**
-     * @return ReflectionProperty
-     */
-    public function getReflectionProperty(): ReflectionProperty
-    {
-        return $this->reflectionProperty;
-    }
-
-    public function setReflectionProperty(ReflectionProperty $reflectionProperty): self
+    public function setReflectionProperty(?ReflectionProperty $reflectionProperty): self
     {
         $this->reflectionProperty = $reflectionProperty;
+
         return $this;
     }
-
 
     public function getExcelColumn(): ?ExcelColumn
     {
@@ -133,6 +126,14 @@ class ModelPropertyMetadata
         return $reflectionGetterMethod->getName();
     }
 
+    /**
+     * @throws ReflectionException
+     */
+    public function getTypeAppropriateGetterName(): string
+    {
+        return 'bool' === $this->getExpectedType() ? $this->getBoolIsGetterName() : $this->getGetterName();
+    }
+
     public function getGetterName(): string
     {
         return sprintf('%s%s', self::GETTER_PREFIX, ucfirst($this->propertyName));
@@ -154,6 +155,18 @@ class ModelPropertyMetadata
     public function getAllSupportedGetterNames(): array
     {
         return [$this->getGetterName(), $this->getBoolIsGetterName(), $this->getBoolHasGetterName()];
+    }
+
+    /**
+     * @return class-string|string|null
+     *
+     * @throws ReflectionException
+     */
+    public function getExpectedType(): ?string
+    {
+        $returnType = (new ReflectionMethod($this->getExcelColumn()->getTargetExcelCellClass(), 'getParsedValue'))->getReturnType();
+
+        return null !== $returnType ? $returnType->getName() : null;
     }
 
     public function getSetterName(): string

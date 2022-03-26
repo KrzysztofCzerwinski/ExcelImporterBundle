@@ -42,6 +42,30 @@ class ModelMetadata
     }
 
     /**
+     * @param ModelPropertyMetadata[] $modelPropertiesMetadata
+     *
+     * @throws DuplicateExcelIdentifierException
+     */
+    public function setModelPropertiesMetadata(array $modelPropertiesMetadata): self
+    {
+        $this->modelPropertiesMetadata = [];
+        foreach ($modelPropertiesMetadata as $columnKey => $modelPropertyMetadata) {
+            $this->addModelPropertyMetadata((string)$columnKey, $modelPropertyMetadata);
+        }
+
+        return $this;
+    }
+
+    public function hasProperty(string $propertyName): bool
+    {
+        return !empty(
+            array_filter($this->modelPropertiesMetadata, static function (ModelPropertyMetadata $modelPropertyMetadata) use ($propertyName): bool {
+                return $propertyName === $modelPropertyMetadata->getPropertyName();
+            })
+        );
+    }
+
+    /**
      * @throws DuplicateExcelIdentifierException
      */
     public function addModelPropertyMetadata(string $columnIdentifier, ModelPropertyMetadata $modelPropertyMetadata): self
@@ -70,7 +94,6 @@ class ModelMetadata
             'strcasecmp'
         );
     }
-
 
     /**
      * @throws InvalidModelPropertyException

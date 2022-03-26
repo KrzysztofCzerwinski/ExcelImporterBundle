@@ -1,6 +1,11 @@
 services:
   _defaults:
     autowire: false
+    autoconfigure: true
+
+  _instanceof:
+    Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell:
+      tags: ['excel_importer.excel_cell']
 
   Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory:
     autowire: true
@@ -31,8 +36,12 @@ services:
   Kczer\ExcelImporterBundle\Model\Factory\ModelFactory:
     autowire: true
 
+  Kczer\ExcelImporterBundle\Model\Factory\ModelPropertyMetadataFactory: ~
+
   Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory:
-    autowire: true
+    arguments:
+      $translator: '@translator'
+      $modelPropertyMetadataFactory: '@Kczer\ExcelImporterBundle\Model\Factory\ModelPropertyMetadataFactory'
 
   Kczer\ExcelImporterBundle\Test\TestDictionary:
     autowire: true
@@ -80,4 +89,21 @@ services:
 
   Kczer\ExcelImporterBundle\Util\FieldIdResolver:
 
+  Kczer\ExcelImporterBundle\Twig\Twig:
+    autowire: true
+
+  Kczer\ExcelImporterBundle\Util\CommandHelper: ~
+
   Kczer\ExcelImporterBundle\Importer\Validator\Factory\ImportValidatorFactory:
+
+  Kczer\ExcelImporterBundle\Command\MakeModelCommand:
+    public: true
+    autowire: true
+
+  Kczer\ExcelImporterBundle\Maker\ModelMaker:
+    autowire: true
+    arguments:
+      $emptyBoolAsFalse: '%excel_cell.bool.empty_as_false%'
+      $projectDir: '%kernel.project_dir%'
+
+  Kczer\ExcelImporterBundle\Twig\ClassHelperExtension: ~

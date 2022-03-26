@@ -14,3 +14,6 @@ excel_importer:
     bool:
       true_display_value: YES
       false_display_value: NO
+  command:
+    make_model:
+      description: Make model (display model) for import

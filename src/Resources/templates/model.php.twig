@@ -1,0 +1,41 @@
+<?php
+declare(strict_types=1);
+
+namespace {{ modelMetadata.modelClassName|namespace }};
+
+{% block imports %}
+{% for importClass in importClasses %}
+use {{ importClass }};
+{% endfor %}
+{% endblock %}
+
+{% block model_class %}
+class {{ modelMetadata.modelClassName|short_name }}
+{{ '{' }}
+{% for propertyMetadata in modelMetadata.modelPropertiesMetadata %}
+    /**
+     * {{propertyMetadata.expectedType|var_annotation(not propertyMetadata.excelColumn.required, emptyBoolAsFalse)}}
+     *
+     * @ExcelColumn("{{ propertyMetadata.columnKey }}", cellName="{{ propertyMetadata.excelColumn.cellName }}", targetExcelCellClass={{ propertyMetadata.excelColumn.targetExcelCellClass|short_name }}::class{{ not propertyMetadata.excelColumn.required ? ', required=false' : '' }})
+     */
+    private ${{ propertyMetadata.propertyName }};
+
+{% endfor %}
+{% for propertyMetadata in modelMetadata.modelPropertiesMetadata %}
+    public function {{ propertyMetadata.typeAppropriateGetterName }}(){{ propertyMetadata.expectedType is not null ? propertyMetadata.expectedType|return_type(not propertyMetadata.excelColumn.required, emptyBoolAsFalse) : ''}}
+    {{ '{' }}
+        return $this->{{ propertyMetadata.propertyName }};
+    {{ '}' }}
+
+    public function {{ propertyMetadata.setterName }}({{ (propertyMetadata.expectedType is not null ? propertyMetadata.expectedType|param(not propertyMetadata.excelColumn.required, emptyBoolAsFalse) : '')}}${{ propertyMetadata.propertyName }}): self
+    {{ '{' }}
+        $this->{{ propertyMetadata.propertyName }} = ${{ propertyMetadata.propertyName }};
+
+        return $this;
+    {{ '}' }}
+{% if not loop.last %}
+
+{% endif %}
+{% endfor %}
+{{ '}' }}
+{% endblock %}

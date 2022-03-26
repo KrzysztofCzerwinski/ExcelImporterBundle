@@ -28,12 +28,19 @@ class ModelMetadataFactory
     /** @var TranslatorInterface */
     private $translator;
 
+    /** @var ModelPropertyMetadataFactory */
+    private $modelPropertyMetadataFactory;
+
     /** @var AnnotationReader */
     private $annotationReader;
 
-    public function __construct(TranslatorInterface $translator)
+    public function __construct(
+        TranslatorInterface $translator,
+        ModelPropertyMetadataFactory $modelPropertyMetadataFactory
+    )
     {
         $this->translator = $translator;
+        $this->modelPropertyMetadataFactory = $modelPropertyMetadataFactory;
         $this->annotationReader = new AnnotationReader();
     }
 
@@ -65,14 +72,13 @@ class ModelMetadataFactory
             }
             $isPropertyInDisplayModel = $isDisplayModelClassDefined && $displayModelReflectionClass->hasProperty($reflectionProperty->getName());
             $columnKey = $this->translator->trans($excelColumn->getColumnKey());
-            $modelPropertyMetadata = (new ModelPropertyMetadata())
-                ->setReflectionProperty($reflectionProperty)
-                ->setExcelColumn($excelColumn)
-                ->setColumnKey($columnKey)
-                ->setPropertyName($reflectionProperty->getName())
-                ->setInDisplayModel($isPropertyInDisplayModel)
-                ->setValidators($this->getPropertyValidators($reflectionProperty))
-            ;
+            $modelPropertyMetadata = $this->modelPropertyMetadataFactory->createModelPropertyMetadata(
+                $columnKey,
+                $reflectionProperty,
+                $excelColumn,
+                $this->getPropertyValidators($reflectionProperty),
+                $isPropertyInDisplayModel
+            );
             $this
                 ->validateExcelCellClass($modelPropertyMetadata)
                 ->validatePropertySettable($modelReflectionClass, $modelPropertyMetadata)
@@ -89,6 +95,13 @@ class ModelMetadataFactory
         }
 
         return $modelMetadata;
+    }
+
+    public function createMetadataForNonExistingClass(string $className): ModelMetadata
+    {
+        return (new ModelMetadata())
+            ->setModelClassName($className)
+        ;
     }
 
     /**
