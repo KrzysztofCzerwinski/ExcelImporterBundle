@@ -161,8 +161,9 @@ class ModelMaker
             ->rearrangeColumnKeyOrder($modelMetadata, $useNamedColumnKeys)
         ;
 
+        $modelFileLocation = $this->resolveModelLocationFromClass($modelClass);
         $this->filesystem->dumpFile(
-            $this->resolveModelLocationFromClass($modelClass),
+            $modelFileLocation,
             $this->twig->render('model.php.twig', [
                 'importClasses' => $this->resolveClassesToImport($modelMetadata),
                 'modelMetadata' => $modelMetadata,
@@ -170,9 +171,11 @@ class ModelMaker
             ])
         );
 
+        $displayModelFileLocation = null;
         if (null !== $displayModelClass) {
+            $displayModelFileLocation = $this->resolveModelLocationFromClass($displayModelClass);
             $this->filesystem->dumpFile(
-                $this->resolveModelLocationFromClass($displayModelClass),
+                $displayModelFileLocation,
                 $this->twig->render('display_model.php.twig', [
                     'importClasses' => [AbstractDisplayModel::class],
                     'modelClass' => $displayModelClass,
@@ -181,6 +184,7 @@ class ModelMaker
             );
         }
 
+        $this->commandHelper->addSuccess($this->createSuccessMessage($modelFileLocation, $displayModelFileLocation));
     }
 
     private function makeFullyQualifiedModelClassName(string $shortModelClassName): string
@@ -396,5 +400,13 @@ class ModelMaker
             DIRECTORY_SEPARATOR .
             str_replace('\\', DIRECTORY_SEPARATOR, str_replace(self::MODEL_NAMESPACE, '', $class)) .
             '.php';
+    }
+
+    private function createSuccessMessage(string $modelLocation, ?string $displayModelLocation): string
+    {
+        return 'Created following files:' .
+            PHP_EOL .
+            $modelLocation .
+            (null !== $displayModelLocation ? PHP_EOL . $displayModelLocation : '');
     }
 }

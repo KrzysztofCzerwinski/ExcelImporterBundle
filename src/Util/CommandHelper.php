@@ -25,6 +25,11 @@ class CommandHelper
         $this->io->block($message, 'info', 'fg=white;bg=blue');
     }
 
+    public function addSuccess(string $message): void
+    {
+        $this->io->success($message);
+    }
+
     public function addWarning(string $message): void
     {
         $this->io->warning($message);
