@@ -398,6 +398,8 @@ class ModelMaker
             DIRECTORY_SEPARATOR .
             'Model' .
             DIRECTORY_SEPARATOR .
+            'ExcelImporter' .
+            DIRECTORY_SEPARATOR .
             str_replace('\\', DIRECTORY_SEPARATOR, str_replace(self::MODEL_NAMESPACE, '', $class)) .
             '.php';
     }
