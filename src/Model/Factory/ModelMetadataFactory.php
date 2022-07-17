@@ -15,6 +15,7 @@ use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedColumnExcelCellClas
 use Kczer\ExcelImporterBundle\Exception\DuplicateExcelIdentifierException;
 use Kczer\ExcelImporterBundle\Model\ModelMetadata;
 use Kczer\ExcelImporterBundle\Model\ModelPropertyMetadata;
+use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
@@ -25,23 +26,11 @@ use function is_a;
 
 class ModelMetadataFactory
 {
-    /** @var TranslatorInterface */
-    private $translator;
-
-    /** @var ModelPropertyMetadataFactory */
-    private $modelPropertyMetadataFactory;
-
-    /** @var AnnotationReader */
-    private $annotationReader;
-
     public function __construct(
-        TranslatorInterface $translator,
-        ModelPropertyMetadataFactory $modelPropertyMetadataFactory
-    )
-    {
-        $this->translator = $translator;
-        $this->modelPropertyMetadataFactory = $modelPropertyMetadataFactory;
-        $this->annotationReader = new AnnotationReader();
+        private TranslatorInterface          $translator,
+        private ModelPropertyMetadataFactory $modelPropertyMetadataFactory,
+        private AnnotationReader             $annotationReader,
+    ) {
     }
 
     /**
@@ -65,7 +54,9 @@ class ModelMetadataFactory
 
         $modelMetadata = (new ModelMetadata())->setModelClassName($modelReflectionClass->getName());
         foreach ($modelReflectionClass->getProperties() as $reflectionProperty) {
-            $excelColumn = $this->annotationReader->getPropertyAnnotation($reflectionProperty, ExcelColumn::class);
+            $excelColumn =
+                ($reflectionProperty->getAttributes(ExcelColumn::class, ReflectionAttribute::IS_INSTANCEOF)[0] ?? null)?->newInstance() ??
+                $this->annotationReader->getPropertyAnnotation($reflectionProperty, ExcelColumn::class);
             if (null === $excelColumn) {
 
                 continue;
@@ -174,15 +165,32 @@ class ModelMetadataFactory
      */
     private function getPropertyValidators(ReflectionProperty $reflectionProperty): array
     {
+        $excelColumnValidatorReflectionAttributes = $reflectionProperty->getAttributes(
+            AbstractExcelColumnValidator::class,
+            ReflectionAttribute::IS_INSTANCEOF
+        );
+        if (!empty($excelColumnValidatorReflectionAttributes)) {
+
+            return array_map(
+                static function (ReflectionAttribute $reflectionAttribute): AbstractCellValidator {
+                    /** @var AbstractExcelColumnValidator $excelColumnValidator */
+                    $excelColumnValidator = $reflectionAttribute->newInstance();
+
+                    return $excelColumnValidator->getRelatedValidator();
+                },
+                $excelColumnValidatorReflectionAttributes
+            );
+        }
+
         /** @var AbstractExcelColumnValidator[] $excelColumnValidatorAnnotations */
-        $excelColumnValidatorAnnotations = array_filter($this->annotationReader->getPropertyAnnotations($reflectionProperty), static function ($annotation): bool {
+        $excelColumnValidatorAnnotations = array_filter(
+            $this->annotationReader->getPropertyAnnotations($reflectionProperty),
+            static fn($annotation): bool => $annotation instanceof AbstractExcelColumnValidator
+        );
 
-            return $annotation instanceof AbstractExcelColumnValidator;
-        });
-
-        return array_map(static function (AbstractExcelColumnValidator $excelColumnValidator): AbstractCellValidator {
-
-            return $excelColumnValidator->getRelatedValidator();
-        }, $excelColumnValidatorAnnotations);
+        return array_map(
+            static fn(AbstractExcelColumnValidator $excelColumnValidator): AbstractCellValidator => $excelColumnValidator->getRelatedValidator(),
+            $excelColumnValidatorAnnotations
+        );
     }
 }

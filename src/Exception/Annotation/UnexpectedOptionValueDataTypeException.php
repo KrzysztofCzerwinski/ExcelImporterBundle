@@ -5,7 +5,6 @@ namespace Kczer\ExcelImporterBundle\Exception\Annotation;
 
 use Exception;
 use Throwable;
-use function get_class;
 use function gettype;
 use function is_object;
 
@@ -19,7 +18,7 @@ class UnexpectedOptionValueDataTypeException extends Exception
             $optionName,
             $annotationClass,
             $expectedOptionType,
-            is_object($givenValue) ? get_class($givenValue) : gettype($givenValue)
+            is_object($givenValue) ? $givenValue::class : gettype($givenValue)
         ), 0, $previous);
     }
 }

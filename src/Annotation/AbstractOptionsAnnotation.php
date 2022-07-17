@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Annotation;
 
+use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidAnnotationParamException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedAnnotationOptionException;
@@ -10,7 +11,6 @@ use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionExpectedDataT
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionValueDataTypeException;
 use function array_diff;
 use function array_diff_key;
-use function array_keys;
 use function current;
 use function is_array;
 use function key;
@@ -18,6 +18,7 @@ use function key;
 /**
  * @Annotation
  */
+#[Attribute]
 abstract class AbstractOptionsAnnotation
 {
     public const SUPPORTED_OPTION_EXPECTED_DATA_TYPES = [
@@ -31,7 +32,7 @@ abstract class AbstractOptionsAnnotation
     /**
      * @var array<string, mixed>
      */
-    protected $options;
+    protected array $options;
 
     /**
      * @throws InvalidAnnotationParamException
@@ -60,15 +61,15 @@ abstract class AbstractOptionsAnnotation
 
     /**
      * @return array<string, string>
-     * Array with keys as options name
-     * and values as types (basic PHP types only- supported types in AbstractOptionsAnnotation::SUPPORTED_OPTION_EXPECTED_DATA_TYPES)
+     *         Array with keys as options name
+     *         and values as types (native PHP types only - supported types in AbstractOptionsAnnotation::SUPPORTED_OPTION_EXPECTED_DATA_TYPES)
      */
     protected abstract function getSupportedOptions(): array;
 
     /**
      * @throws UnexpectedAnnotationOptionException
      */
-    private function validateOptionsNames(array $options): self
+    private function validateOptionsNames(array $options): static
     {
         $supportedOptions = $this->getSupportedOptions();
         $unknownOptions = array_diff_key($options, $supportedOptions);

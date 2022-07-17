@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Annotation\Validator;
 
+use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Doctrine\Common\Annotations\Annotation\Target;
 use Kczer\ExcelImporterBundle\Importer\Validator\AbstractValidator;
@@ -11,21 +12,20 @@ use Kczer\ExcelImporterBundle\Importer\Validator\AbstractValidator;
  * @Annotation
  * @Target({"PROPERTY", "CLASS"})
  */
+#[Attribute(Attribute::TARGET_PROPERTY|Attribute::TARGET_CLASS)]
 abstract class AbstractExcelValidator
 {
     /**
      * @Required
-     *
-     * @var string
      */
-    protected $message;
+    protected string $message;
 
     /**
-     * @param array{message: string} $annotationData
+     * @param array{message: string} $data
      */
-    public function __construct(array $annotationData)
+    public function __construct(array $data = [])
     {
-        $this->message = $annotationData['message'];
+        $this->message = $data['message'];
     }
 
     public abstract function getRelatedValidator(): AbstractValidator;

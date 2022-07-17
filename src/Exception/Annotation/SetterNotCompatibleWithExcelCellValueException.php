@@ -16,7 +16,7 @@ class SetterNotCompatibleWithExcelCellValueException extends AnnotationConfigura
                 "setter '%s::%s' is not compatible with '%s' EXCEL CELL value type. Make sure that no errors in import occurred and proper data type is returned by Excel cell class",
                 $modelClass,
                 $modelPropertyMetadata->getSetterName(),
-                get_class($excelCell)
+                $excelCell::class
             ),
             0,
             $previous

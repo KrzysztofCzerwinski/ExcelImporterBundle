@@ -36,7 +36,6 @@ use function array_map;
 use function array_merge;
 use function array_unshift;
 use function current;
-use function get_class;
 use function is_callable;
 use function key;
 use function range;
@@ -222,7 +221,7 @@ class ModelExcelExporter
 
     private function assignModelClass(): self
     {
-        $this->modelClass = get_class(current($this->models));
+        $this->modelClass = current($this->models)::class;
 
         return $this;
     }

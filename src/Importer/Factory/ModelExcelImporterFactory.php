@@ -21,6 +21,14 @@ class ModelExcelImporterFactory
     }
 
     /**
+     * @template TM
+     * @template TD
+     *
+     * @param class-string<TM> $modelClass
+     * @param class-string<TD>|null $displayModelClass
+     *
+     * @return ModelExcelImporter<TM, TD>
+     *
      * @throws UnexpectedDisplayModelClassException
      */
     public function createModelExcelImporter(string $modelClass, ?string $displayModelClass = null): ModelExcelImporter

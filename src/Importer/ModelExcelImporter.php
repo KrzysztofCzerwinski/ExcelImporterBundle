@@ -30,14 +30,17 @@ use Kczer\ExcelImporterBundle\Util\FieldIdResolver;
 use ReflectionException;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use function current;
-use function get_class;
 
+/**
+ * @template TM
+ * @template TD
+ */
 class ModelExcelImporter extends AbstractExcelImporter
 {
-    /** @var class-string */
+    /** @var class-string<TM> */
     private $importModelClass;
 
-    /** @var class-string<AbstractDisplayModel>|null */
+    /** @var class-string<AbstractDisplayModel>|class-string<TD>|null */
     private $displayModelClass = null;
 
     /** @var ModelMetadata */
@@ -82,13 +85,16 @@ class ModelExcelImporter extends AbstractExcelImporter
     }
 
     /**
-     * @return object[] Array of models associated with ModelClass
+     * @return TM[] Array of models associated with ModelClass
      */
     public function getModels(): array
     {
         return $this->models;
     }
 
+    /**
+     * @return AbstractDisplayModel[]|TD[]
+     */
     public function getDisplayModels(): array
     {
         return $this->displayModels;
@@ -120,7 +126,7 @@ class ModelExcelImporter extends AbstractExcelImporter
     }
 
     /**
-     * @return object|null First model associated with the import or nul if no models are present
+     * @return TM|null First model associated with the import or nul if no models are present
      */
     public function getFirstModel(): ?object
     {
@@ -130,9 +136,9 @@ class ModelExcelImporter extends AbstractExcelImporter
     }
 
     /**
-     * @return object|null First model associated with the import or nul if no models are present
+     * @return TD|null First model associated with the import or null if no models are present
      */
-    public function getFirstDisplayModel(): ?object
+    public function getFirstDisplayModel(): ?AbstractDisplayModel
     {
         $displayModels = $this->getDisplayModels();
 
@@ -213,7 +219,7 @@ class ModelExcelImporter extends AbstractExcelImporter
 
                 continue;
             }
-            $this->importRelateErrorMessages[get_class($validator)] =
+            $this->importRelateErrorMessages[$validator::class] =
                 $this->translator->trans(...$validator->getMessageWithParams());
         }
     }
