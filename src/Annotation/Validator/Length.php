@@ -3,41 +3,40 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Annotation\Validator;
 
+use Attribute;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\LengthCellValidator;
-use Kczer\ExcelImporterBundle\Importer\Validator\AbstractValidator;
 use Symfony\Contracts\Service\Attribute\Required;
+use function is_int;
+use const PHP_INT_MAX;
 
 /**
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class Length extends AbstractExcelValidator
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class Length extends AbstractExcelColumnValidator
 {
-    /** @var int */
-    private $minLength;
+    private int $minLength;
 
     /**
      * @Required
-     *
-     * @var int
      */
-    private $maxLength;
+    private int $maxLength;
 
     /**
-     * @param array{minLength: int|null, maxLength: int, message: string} $annotationData
+     * @param array{minLength: int|null, maxLength: int, message: string}|int $data
      */
-    public function __construct(array $annotationData)
+    public function __construct(array|int $data = [], ?int $minLength = null, ?int $maxLength = null, ?string $message = null)
     {
-        parent::__construct($annotationData + ['message' => LengthCellValidator::getDefaultMessage()]);
+        parent::__construct(['message' => $message ?? $data['message'] ?? LengthCellValidator::getDefaultMessage()]);
 
-        $this->minLength = $annotationData['minLength'] ?? 0;
-        $this->maxLength = $annotationData['maxLength'];
+        $maxLength = is_int($data) ? $data : $maxLength;
+
+        $this->minLength = $minLength ?? $data['minLength'] ?? 0;
+        $this->maxLength = $maxLength ?? $data['maxLength'] ?? PHP_INT_MAX;
     }
 
-    /**
-     * @return LengthCellValidator
-     */
-    public function getRelatedValidator(): AbstractValidator
+    public function getRelatedValidator(): LengthCellValidator
     {
         return new LengthCellValidator($this->message, $this->maxLength, $this->minLength);
     }

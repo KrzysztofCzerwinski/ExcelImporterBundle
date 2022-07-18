@@ -42,6 +42,7 @@ services:
     arguments:
       $translator: '@translator'
       $modelPropertyMetadataFactory: '@Kczer\ExcelImporterBundle\Model\Factory\ModelPropertyMetadataFactory'
+      $annotationReader: '@annotations.reader'
 
   Kczer\ExcelImporterBundle\Test\TestDictionary:
     autowire: true

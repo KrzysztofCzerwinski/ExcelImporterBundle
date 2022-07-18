@@ -8,7 +8,6 @@ use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValid
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedExcelCellClassException;
 use Kczer\ExcelImporterBundle\Exception\ExcelCellConfiguration\UnexpectedValidatorClassException;
-use function get_class;
 use function is_a;
 
 class ExcelCellConfiguration
@@ -103,7 +102,7 @@ class ExcelCellConfiguration
         foreach ($validators as $validator) {
             if (!($validator instanceof AbstractCellValidator)) {
 
-                throw new UnexpectedValidatorClassException(get_class($validator));
+                throw new UnexpectedValidatorClassException($validator::class);
             }
         }
     }

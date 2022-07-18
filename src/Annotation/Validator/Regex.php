@@ -3,41 +3,40 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Annotation\Validator;
 
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
+use Attribute;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\RegexCellValidator;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidRegexExpressionException;
-use Kczer\ExcelImporterBundle\Importer\Validator\AbstractValidator;
 use Symfony\Contracts\Service\Attribute\Required;
+use function is_string;
 
 /**
  * @Annotation
  * @Target({"PROPERTY"})
  */
-class Regex extends AbstractExcelValidator
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class Regex extends AbstractExcelColumnValidator
 {
     /**
      * @Required
-     *
-     * @var string
      */
-    private $pattern;
+    private string $pattern;
 
     /**
-     * @param array{pattern: string, message: string} $annotationData
+     * @param array{pattern: string, message: string}|string $data
      */
-    public function __construct(array $annotationData)
+    public function __construct(array|string $data = [], ?string $pattern = null, ?string $message = null)
     {
-        parent::__construct($annotationData + ['message' => RegexCellValidator::getDefaultMessage()]);
+        parent::__construct(['message' => $message ?? $data['message'] ?? RegexCellValidator::getDefaultMessage()]);
 
-        $this->pattern = $annotationData['pattern'];
+        $pattern = is_string($data) ? $data : $pattern;
+
+        $this->pattern = $pattern ?? $data['pattern'] ?? '';
     }
 
     /**
-     * @return RegexCellValidator
-     *
      * @throws InvalidRegexExpressionException
      */
-    public function getRelatedValidator(): AbstractValidator
+    public function getRelatedValidator(): RegexCellValidator
     {
         return new RegexCellValidator($this->message, $this->pattern);
     }

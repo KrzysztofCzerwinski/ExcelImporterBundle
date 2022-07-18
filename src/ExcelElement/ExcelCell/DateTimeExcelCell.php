@@ -11,6 +11,7 @@ use Exception;
  */
 class DateTimeExcelCell extends AbstractExcelCell
 {
+    public const OPTION_REVERSE_FORMAT = 'reverseDateTimeFormat';
 
     /**
      * @inheritDoc

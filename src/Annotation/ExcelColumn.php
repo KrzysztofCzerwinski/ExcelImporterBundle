@@ -3,29 +3,25 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Annotation;
 
+use Attribute;
 use Doctrine\Common\Annotations\Annotation;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\DateTimeExcelCell;
 use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidAnnotationParamException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedAnnotationOptionException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionExpectedDataTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionValueDataTypeException;
+use phpDocumentor\Reflection\Types\ClassString;
 use function is_bool;
+use function is_string;
 
 /**
  * @Annotation
  * @Annotation\Target({"PROPERTY"})
  */
+#[Attribute(Attribute::TARGET_PROPERTY)]
 class ExcelColumn extends AbstractOptionsAnnotation
 {
-    /**
-     * Column name
-     *
-     * @Annotation\Required()
-     *
-     * @var string
-     */
-    private $cellName;
-
     /**
      * Fully qualified ExcelCell class
      *
@@ -33,52 +29,70 @@ class ExcelColumn extends AbstractOptionsAnnotation
      *
      * @var class-string<AbstractExcelCell>
      */
-    private $targetExcelCellClass;
+    private string $targetExcelCellClass;
 
     /**
      * Excel column key in A-Z notation or human-readable name from Excel header.
      * Can also be constant field id like A3, C10 etc.
      *
      * @Annotation\Required()
-     *
-     * @var string
      */
-    private $columnKey;
+    private string $columnKey;
+
+    /**
+     * Column name- default to $columnKey
+     */
+    private string $cellName;
 
     /**
      * Whether column cells are required or not
-     *
-     * @var bool
      */
-    private $required;
+    private bool $required;
 
 
     /**
-     * @param array{cellName: string, targetExcelCellClass: string, required: bool, columnKey: string|null, value: string|null, options: array} $annotationData
+     * @param array{
+     *     targetExcelCellClass: class-string<AbstractExcelCell>,
+     *     columnKey: string|null,
+     *     cellName: string,
+     *     required: bool,
+     *     options: array,
+     *     value: string|null,
+     * }|string $data
+     *
+     * @param class-string<AbstractExcelCell>|null $targetExcelCellClass
      *
      * @throws InvalidAnnotationParamException
      * @throws UnexpectedAnnotationOptionException
      * @throws UnexpectedOptionValueDataTypeException
      * @throws UnexpectedOptionExpectedDataTypeException
      */
-    public function __construct(array $annotationData)
-    {
-        parent::__construct($annotationData);
-        $required = $annotationData['required'] ?? true;
+    public function __construct(
+        string|array $data = [],
+        ?string      $targetExcelCellClass = null,
+        ?string      $columnKey = null,
+        ?string      $cellName = null,
+        ?bool        $required = null,
+        ?array       $options = null,
+    ) {
+        parent::__construct(['options' => $options ?? $data['options'] ?? []]);
+        $required = $required ?? $data['required'] ?? true;
         if (!is_bool($required)) {
 
             throw new InvalidAnnotationParamException('required', static::class, $required, 'bool');
         }
-        $this->targetExcelCellClass = $annotationData['targetExcelCellClass'];
-        $this->columnKey = $annotationData['columnKey'] ?? $annotationData['value'];
-        $this->cellName = $annotationData['cellName'] ?? '';
+        $columnKey = null === $columnKey && is_string($data) ? $data : $columnKey;
+
+        $this->targetExcelCellClass = $targetExcelCellClass ?? $data['targetExcelCellClass'];
+        $this->columnKey = $columnKey ?? $data['columnKey'] ?? $data['value'] ?? '';
+        $this->cellName = $cellName ?? $data['cellName'] ?? $this->columnKey;
         $this->required = $required;
     }
 
     protected function getSupportedOptions(): array
     {
         return [
-            'reverseDateTimeFormat' => 'string',
+            DateTimeExcelCell::OPTION_REVERSE_FORMAT => 'string',
         ];
     }
 
@@ -100,7 +114,7 @@ class ExcelColumn extends AbstractOptionsAnnotation
         return $this->columnKey;
     }
 
-    public function setColumnKey($columnKey)
+    public function setColumnKey(string $columnKey): static
     {
         $this->columnKey = $columnKey;
 
@@ -119,6 +133,6 @@ class ExcelColumn extends AbstractOptionsAnnotation
 
     public function getReverseReverseDateTimeFormat(): ?string
     {
-        return $this->getOptions()['reverseDateTimeFormat'] ?? null;
+        return $this->getOptions()[DateTimeExcelCell::OPTION_REVERSE_FORMAT] ?? null;
     }
 }
