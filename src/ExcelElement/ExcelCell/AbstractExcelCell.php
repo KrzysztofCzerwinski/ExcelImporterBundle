@@ -9,30 +9,25 @@ use function trim;
 
 abstract class AbstractExcelCell
 {
-    /** @var TranslatorInterface */
-    protected $translator;
+    protected ?string $errorMessage = null;
 
-    /** @var string|null */
-    protected $errorMessage = null;
+    protected ?string $rawValue = null;
 
-    /** @var string|null */
-    protected $rawValue = null;
+    protected string $name;
 
-    /** @var string */
-    protected $name;
+    protected bool $required;
 
-    /** @var bool */
-    protected $required;
+    protected array $options;
 
     /** @var AbstractCellValidator[] */
-    private $validators = [];
+    private array $validators = [];
 
-    /** @var bool */
-    protected $validateObligatory = true;
+    protected bool $validateObligatory = true;
 
-    public function __construct(TranslatorInterface $translator)
-    {
-        $this->translator = $translator;
+
+    public function __construct(
+        protected TranslatorInterface $translator,
+    ) {
     }
 
     public function getName(): string
@@ -40,7 +35,7 @@ abstract class AbstractExcelCell
         return $this->translator->trans($this->name);
     }
 
-    public function setName(string $name): self
+    public function setName(string $name): static
     {
         $this->name = $name;
         return $this;
@@ -51,7 +46,7 @@ abstract class AbstractExcelCell
         return $this->required;
     }
 
-    public function setRequired(bool $required): self
+    public function setRequired(bool $required): static
     {
         $this->required = $required;
 
@@ -68,7 +63,7 @@ abstract class AbstractExcelCell
         return null !== $this->errorMessage;
     }
 
-    protected function setErrorMessage(?string $errorMessage): self
+    protected function setErrorMessage(?string $errorMessage): static
     {
         $this->errorMessage = $errorMessage;
 
@@ -86,9 +81,21 @@ abstract class AbstractExcelCell
     /**
      * @param AbstractCellValidator[] $validators
      */
-    public function setValidators(array $validators): self
+    public function setValidators(array $validators): static
     {
         $this->validators = $validators;
+        return $this;
+    }
+
+    public function getOptions(): array
+    {
+        return $this->options;
+    }
+
+    public function setOptions(array $options): static
+    {
+        $this->options = $options;
+
         return $this;
     }
 
@@ -102,20 +109,15 @@ abstract class AbstractExcelCell
         return (string)$this->rawValue;
     }
 
-    /**
-     * @return mixed|null
-     */
-    public function getValue()
+    public function getValue(): mixed
     {
         return !$this->hasError() ? $this->getParsedValue() : null;
     }
 
     /**
      * Get value parsed to proper data type
-     *
-     * @return mixed|null
      */
-    protected abstract function getParsedValue();
+    protected abstract function getParsedValue(): mixed;
 
     /**
      * Check any cell-specific value requirements (Like database presence or format matching)
@@ -125,7 +127,7 @@ abstract class AbstractExcelCell
     protected abstract function validateValueRequirements(): ?string;
 
 
-    public function setRawValue(string $rawValue): self
+    public function setRawValue(string $rawValue): static
     {
         $rawValue = trim($rawValue);
         $this->rawValue = '' !== $rawValue ? $rawValue : null;

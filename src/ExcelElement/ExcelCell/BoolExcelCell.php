@@ -13,26 +13,14 @@ use function strtolower;
  */
 class BoolExcelCell extends AbstractExcelCell
 {
-    /** @var array */
-    private $trueValues;
-
-    /** @var array */
-    private $falseValues;
-
-    /** @var bool */
-    private $emptyAsFalse;
-
     public function __construct(
         TranslatorInterface $translator,
-        array               $trueValues,
-        array               $falseValues,
-        bool                $emptyAsFalse
+        private array       $trueValues,
+        private array       $falseValues,
+        private bool        $emptyAsFalse
     )
     {
         parent::__construct($translator);
-        $this->trueValues = $trueValues;
-        $this->falseValues = $falseValues;
-        $this->emptyAsFalse = $emptyAsFalse;
         $this->validateObligatory = !$emptyAsFalse;
     }
 

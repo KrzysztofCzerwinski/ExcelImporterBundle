@@ -122,7 +122,7 @@ abstract class AbstractExcelImporter
      *
      * @return $this
      */
-    public function setRowRequirementsValidator(callable $rowRequirementsValidator): self
+    public function setRowRequirementsValidator(callable $rowRequirementsValidator): static
     {
         $this->rowRequirementsValidator = $rowRequirementsValidator;
 
@@ -153,7 +153,7 @@ abstract class AbstractExcelImporter
     /**
      * @throws UnexpectedExcelCellClassException
      */
-    protected abstract function configureExcelCells(): self;
+    protected abstract function configureExcelCells(): static;
 
 
     public function hasErrors(): bool
@@ -192,6 +192,7 @@ abstract class AbstractExcelImporter
      * @param string $jsonExcelRows
      * @param string|null $indexBy Model property which values will be used as model keys
      * @param bool $namedColumnKeys TRUE if named column keys are used in model, FALSE otherwise
+     * @param array $options Options passed to Excel cell class
      *
      * @return $this
      *
@@ -201,8 +202,12 @@ abstract class AbstractExcelImporter
      * @throws MissingExcelFieldException
      * @throws UnexpectedExcelCellClassException
      */
-    public function parseJson(string $jsonExcelRows, string $indexBy = null, bool $namedColumnKeys = true): self
-    {
+    public function parseJson(
+        string $jsonExcelRows,
+        string $indexBy = null,
+        bool   $namedColumnKeys = true,
+        array  $options = [],
+    ): static {
         $this->rawExcelRows = json_decode($jsonExcelRows, true);
         if (null === $this->rawExcelRows) {
 
@@ -210,7 +215,7 @@ abstract class AbstractExcelImporter
         }
         $this
             ->castRawExcelRowsString()
-            ->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP, $indexBy, $namedColumnKeys);
+            ->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP, $indexBy, $namedColumnKeys, $options);
 
         return $this;
     }
@@ -223,6 +228,7 @@ abstract class AbstractExcelImporter
      *                          AbstractExcelImporter::FIRST_ROW_MODE_SKIP <br>
      *                          AbstractExcelImporter::FIRST_ROW_MODE_DONT_SKIP <br>
      *                          AbstractExcelImporter::FIRST_ROW_MODE_SKIP_IF_INVALID <br>
+     * @param array $options Options passed to Excel cell class
      *
      * @return $this
      *
@@ -235,9 +241,10 @@ abstract class AbstractExcelImporter
     public function parseExcelFile(
         string $excelFilePath,
         string $indexBy = null,
-        bool $namedColumnKeys = true,
-        int $firstRowMode = self::FIRST_ROW_MODE_SKIP
-    ): self
+        bool   $namedColumnKeys = true,
+        int    $firstRowMode = self::FIRST_ROW_MODE_SKIP,
+        array  $options = [],
+    ): static
     {
         try {
             $sheet = IOFactory::load($excelFilePath)->getActiveSheet();
@@ -249,7 +256,7 @@ abstract class AbstractExcelImporter
 
         $this
             ->castRawExcelRowsString()
-            ->parseRawExcelRows($firstRowMode, $indexBy, $namedColumnKeys)
+            ->parseRawExcelRows($firstRowMode, $indexBy, $namedColumnKeys, $options)
         ;
 
         return $this;
@@ -266,8 +273,12 @@ abstract class AbstractExcelImporter
      * @throws MissingExcelFieldException
      * @throws InvalidNamedColumnKeyException
      */
-    protected function parseRawExcelRows(int $firstRowMode, ?string $indexBy, bool $namedColumnKeys): void
-    {
+    protected function parseRawExcelRows(
+        int     $firstRowMode,
+        ?string $indexBy,
+        bool    $namedColumnKeys,
+        array   $options,
+    ): void {
         $this
             ->configureExcelCells()
             ->resolvePreHeaderFieldMappedRows()
@@ -286,7 +297,7 @@ abstract class AbstractExcelImporter
 
         $firstRowMode = null !== $this->columnKeyMappings ? self::FIRST_ROW_MODE_SKIP : $firstRowMode;
 
-        [$initialColumnMappedExcelCells, $fieldMappedExcelCells] = $this->createInitialExcelCells();
+        [$initialColumnMappedExcelCells, $fieldMappedExcelCells] = $this->createInitialExcelCells($options);
 
         $skippedFirstRow = true;
         reset($this->rawExcelRows);
@@ -300,7 +311,8 @@ abstract class AbstractExcelImporter
             $excelRow = $this->excelRowFactory->createFromInitialExcelCellsAndRawCellValues(
                 $initialColumnMappedExcelCells,
                 $fieldMappedExcelCells,
-                $rawCellValues
+                $rawCellValues,
+                $options
             );
             if ($isFirstRow && ($firstRowMode & self::FIRST_ROW_MODE_SKIP_IF_INVALID) && $excelRow->hasErrors()) {
 
@@ -341,7 +353,7 @@ abstract class AbstractExcelImporter
         bool   $cellRequired = true,
         bool   $isColumn = true,
         array $cellValidators = []
-    ): self
+    ): static
     {
         $excelCellConfiguration = new ExcelCellConfiguration(
             $excelCellClass,
@@ -411,11 +423,9 @@ abstract class AbstractExcelImporter
         return $this;
     }
 
-    private function resolvePreHeaderFieldMappedRows(): self
+    private function resolvePreHeaderFieldMappedRows(): void
     {
         $this->fieldMappedPreHeaderRows = array_intersect_key($this->rawExcelRows, $this->fieldMappedExcelCellConfigurations);
-
-        return $this;
     }
 
     private function filterPreHeaderRows(): self
@@ -494,17 +504,17 @@ abstract class AbstractExcelImporter
      *
      * @noinspection PhpUnnecessaryCurlyVarSyntaxInspection
      */
-    private function createInitialExcelCells(): array
+    private function createInitialExcelCells(array $options): array
     {
         $initialColumnMappedExcelCells = [];
         foreach ($this->columnMappedExcelCellConfigurations as $columnKey => $excelCellConfiguration) {
-            $initialColumnMappedExcelCells[$columnKey] = $this->excelCellFactory->makeSkeletonFromConfiguration($excelCellConfiguration);
+            $initialColumnMappedExcelCells[$columnKey] = $this->excelCellFactory->makeSkeletonFromConfiguration($excelCellConfiguration, $options);
         }
         $fieldMappedExcelCells = [];
         foreach ($this->fieldMappedExcelCellConfigurations as $rowNumber => $excelCellConfigurations) {
             foreach ($excelCellConfigurations as $columnKey => $excelCellConfiguration) {
                 $fieldMappedExcelCells["{$columnKey}{$rowNumber}"] = $this->excelCellFactory
-                    ->makeSkeletonFromConfiguration($excelCellConfiguration)
+                    ->makeSkeletonFromConfiguration($excelCellConfiguration, $options)
                     ->setRawValue($this->rawExcelRows[$rowNumber][$columnKey]);
             }
         }

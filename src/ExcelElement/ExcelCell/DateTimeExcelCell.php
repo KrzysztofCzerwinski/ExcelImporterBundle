@@ -31,7 +31,7 @@ class DateTimeExcelCell extends AbstractExcelCell
     {
         try {
             new DateTime($this->rawValue);
-        } catch (Exception $exception) {
+        } catch (Exception) {
 
             return $this->createErrorMessageWithNamePrefix('excel_importer.validator.messages.datetime_string_value_required');
         }

@@ -18,7 +18,7 @@ class ExcelRowFactory
     public function createFromInitialExcelCellsAndRawCellValues(
         array $columnMappedInitialExcelCells,
         array $fieldMappedExcelCells,
-        array $rawCellValues
+        array $rawCellValues,
     ): ExcelRow
     {
         /** @var AbstractExcelCell[] $excelCells */
