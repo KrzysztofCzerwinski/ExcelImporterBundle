@@ -11,8 +11,6 @@ use Kczer\ExcelImporterBundle\Exception\Annotation\InvalidAnnotationParamExcepti
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedAnnotationOptionException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionExpectedDataTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionValueDataTypeException;
-use phpDocumentor\Reflection\Types\ClassString;
-use function is_bool;
 use function is_string;
 
 /**
@@ -25,11 +23,9 @@ class ExcelColumn extends AbstractOptionsAnnotation
     /**
      * Fully qualified ExcelCell class
      *
-     * @Annotation\Required()
-     *
-     * @var class-string<AbstractExcelCell>
+     * @var class-string<AbstractExcelCell>|null
      */
-    private string $targetExcelCellClass;
+    private ?string $targetExcelCellClass;
 
     /**
      * Excel column key in A-Z notation or human-readable name from Excel header.
@@ -47,15 +43,15 @@ class ExcelColumn extends AbstractOptionsAnnotation
     /**
      * Whether column cells are required or not
      */
-    private bool $required;
+    private ?bool $required;
 
 
     /**
      * @param array{
-     *     targetExcelCellClass: class-string<AbstractExcelCell>,
+     *     targetExcelCellClass: class-string<AbstractExcelCell>|null,
      *     columnKey: string|null,
      *     cellName: string,
-     *     required: bool,
+     *     required: bool|null,
      *     options: array,
      *     value: string|null,
      * }|string $data
@@ -76,17 +72,12 @@ class ExcelColumn extends AbstractOptionsAnnotation
         ?array       $options = null,
     ) {
         parent::__construct(['options' => $options ?? $data['options'] ?? []]);
-        $required = $required ?? $data['required'] ?? true;
-        if (!is_bool($required)) {
-
-            throw new InvalidAnnotationParamException('required', static::class, $required, 'bool');
-        }
         $columnKey = null === $columnKey && is_string($data) ? $data : $columnKey;
 
-        $this->targetExcelCellClass = $targetExcelCellClass ?? $data['targetExcelCellClass'];
+        $this->targetExcelCellClass = $targetExcelCellClass ?? $data['targetExcelCellClass'] ?? null;
         $this->columnKey = $columnKey ?? $data['columnKey'] ?? $data['value'] ?? '';
         $this->cellName = $cellName ?? $data['cellName'] ?? $this->columnKey;
-        $this->required = $required;
+        $this->required = $required ?? $data['required'] ?? null;
     }
 
     protected function getSupportedOptions(): array
@@ -102,9 +93,9 @@ class ExcelColumn extends AbstractOptionsAnnotation
     }
 
     /**
-     * @return class-string<AbstractExcelCell>
+     * @return class-string<AbstractExcelCell>|null
      */
-    public function getTargetExcelCellClass(): string
+    public function getTargetExcelCellClass(): ?string
     {
         return $this->targetExcelCellClass;
     }
@@ -121,7 +112,7 @@ class ExcelColumn extends AbstractOptionsAnnotation
         return $this;
     }
 
-    public function isRequired(): bool
+    public function isRequired(): ?bool
     {
         return $this->required;
     }

@@ -199,10 +199,10 @@ class ModelExcelImporter extends AbstractExcelImporter
             $propertyExcelColumn = $propertyMetadata->getExcelColumn();
 
             $this->addExcelCell(
-                $propertyExcelColumn->getTargetExcelCellClass(),
+                $propertyMetadata->getTargetExcelCellClass(),
                 $propertyExcelColumn->getCellName(),
                 $columnKey,
-                $propertyExcelColumn->isRequired(),
+                $propertyMetadata->isRequired(),
                 !$this->fieldIdResolver->isColumnKeyFieldIdentifier($propertyExcelColumn->getColumnKey()),
                 $propertyMetadata->getValidators()
             );

@@ -36,7 +36,9 @@ services:
   Kczer\ExcelImporterBundle\Model\Factory\ModelFactory:
     autowire: true
 
-  Kczer\ExcelImporterBundle\Model\Factory\ModelPropertyMetadataFactory: ~
+  Kczer\ExcelImporterBundle\Model\Factory\ModelPropertyMetadataFactory:
+    arguments:
+      $typeMappings: '%excel_cell.types%'
 
   Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory:
     arguments:
