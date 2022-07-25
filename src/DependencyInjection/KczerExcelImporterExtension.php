@@ -22,16 +22,15 @@ class KczerExcelImporterExtension extends Extension implements PrependExtensionI
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
-        $configDir = new FileLocator(__DIR__ . '/../Resources/config');
-        $loader = new YamlFileLoader($container, $configDir);
+        $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.yaml');
 
-        $configuration = new Configuration();
-        $config = $this->processConfiguration($configuration, $configs);
+        $config = $this->processConfiguration(new Configuration(), $configs);
 
         $container->setParameter('excel_cell.bool.true_values', $config['excel_cell']['bool']['true_values']);
         $container->setParameter('excel_cell.bool.false_values', $config['excel_cell']['bool']['false_values']);
         $container->setParameter('excel_cell.bool.empty_as_false', $config['excel_cell']['bool']['empty_as_false']);
+        $container->setParameter('excel_cell.types', $config['excel_cell']['types']);
 
         $container->registerForAutoconfiguration(AbstractExcelCell::class)->addTag('excel_importer.excel_cell');
     }

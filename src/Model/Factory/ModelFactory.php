@@ -59,8 +59,7 @@ class ModelFactory
         array $excelRows,
         ModelMetadata $modelMetadata,
         bool $createDisplayModel = false
-    ): array
-    {
+    ): array {
         $models = [];
         foreach ($excelRows as $index => $excelRow) {
             $model = new $modelClass();
@@ -74,9 +73,11 @@ class ModelFactory
                 $excelCell = $excelCells[$columnKey];
                 $excelCellValue = $createDisplayModel ? $excelCell->getDisplayValue() : $excelCell->getValue();
                 try {
-                    if (null !== $excelCellValue) {
-                        $model->{$setterMethodName}($excelCellValue);
+                    if (null === $excelCellValue && $modelPropertyMetadata->isRequired()) {
+
+                        continue;
                     }
+                    $model->{$setterMethodName}($excelCellValue);
                 } catch (Throwable $exception) {
 
                     throw new SetterNotCompatibleWithExcelCellValueException($modelClass, $excelCell, $modelPropertyMetadata, $exception);

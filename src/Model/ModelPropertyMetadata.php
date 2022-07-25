@@ -1,13 +1,17 @@
 <?php
+/** @noinspection PhpUnused */
 declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Model;
 
+use JetBrains\PhpStorm\ArrayShape;
 use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
 use Kczer\ExcelImporterBundle\Exception\Exporter\NotGettablePropertyException;
 use ReflectionException;
 use ReflectionMethod;
+use ReflectionNamedType;
 use ReflectionProperty;
 use function array_filter;
 use function in_array;
@@ -17,31 +21,31 @@ class ModelPropertyMetadata
 {
     public const GETTER_PREFIX = 'get';
 
-    public const BOOL_IS_GETTER_PREFIX = 'is';
+    public const ISSER_PREFIX = 'is';
 
-    public const BOOL_HAS_GETTER_PREFIX = 'has';
+    public const HASSER_PREFIX = 'has';
 
     public const SETTER_PREFIX = 'set';
 
-    /** @var ReflectionProperty|null */
-    private $reflectionProperty;
+    private ?ReflectionProperty $reflectionProperty = null;
 
-    /** @var ExcelColumn|null */
-    private $excelColumn;
+    private ?ExcelColumn $excelColumn;
 
-    /** @var string|null */
-    private $columnKey;
+    private ?string $columnKey;
 
-    /** @var string */
-    private $propertyName;
+    private string $propertyName;
 
-    /** @var bool */
-    private $inDisplayModel = true;
+    private bool $inDisplayModel = true;
 
     /** @var AbstractCellValidator[] */
-    private $validators;
+    private array $validators;
 
-    public function setReflectionProperty(?ReflectionProperty $reflectionProperty): self
+    /** @var class-string<AbstractExcelCell>|null */
+    private ?string $targetExcelCellClass = null;
+
+    private ?bool $required = null;
+
+    public function setReflectionProperty(?ReflectionProperty $reflectionProperty): static
     {
         $this->reflectionProperty = $reflectionProperty;
 
@@ -53,7 +57,7 @@ class ModelPropertyMetadata
         return $this->excelColumn;
     }
 
-    public function setExcelColumn(?ExcelColumn $excelColumn): self
+    public function setExcelColumn(?ExcelColumn $excelColumn): static
     {
         $this->excelColumn = $excelColumn;
         return $this;
@@ -64,7 +68,7 @@ class ModelPropertyMetadata
         return $this->columnKey;
     }
 
-    public function setColumnKey(?string $columnKey): self
+    public function setColumnKey(?string $columnKey): static
     {
         $this->columnKey = $columnKey;
 
@@ -76,7 +80,7 @@ class ModelPropertyMetadata
         return $this->propertyName;
     }
 
-    public function setPropertyName(string $propertyName): self
+    public function setPropertyName(string $propertyName): static
     {
         $this->propertyName = $propertyName;
         return $this;
@@ -87,9 +91,33 @@ class ModelPropertyMetadata
         return $this->inDisplayModel;
     }
 
-    public function setInDisplayModel(bool $inDisplayModel): self
+    public function setInDisplayModel(bool $inDisplayModel): static
     {
         $this->inDisplayModel = $inDisplayModel;
+
+        return $this;
+    }
+
+    public function getTargetExcelCellClass(): ?string
+    {
+        return $this->targetExcelCellClass;
+    }
+
+    public function setTargetExcelCellClass(string $targetExcelCellClass): static
+    {
+        $this->targetExcelCellClass = $targetExcelCellClass;
+
+        return $this;
+    }
+
+    public function isRequired(): ?bool
+    {
+        return $this->required;
+    }
+
+    public function setRequired(bool $required): static
+    {
+        $this->required = $required;
 
         return $this;
     }
@@ -102,7 +130,7 @@ class ModelPropertyMetadata
         return $this->validators;
     }
 
-    public function setValidators(array $validators): self
+    public function setValidators(array $validators): static
     {
         $this->validators = $validators;
         return $this;
@@ -141,17 +169,15 @@ class ModelPropertyMetadata
 
     public function getBoolIsGetterName(): string
     {
-        return sprintf('%s%s', self::BOOL_IS_GETTER_PREFIX, ucfirst($this->propertyName));
+        return sprintf('%s%s', self::ISSER_PREFIX, ucfirst($this->propertyName));
     }
 
     public function getBoolHasGetterName(): string
     {
-        return sprintf('%s%s', self::BOOL_HAS_GETTER_PREFIX, ucfirst($this->propertyName));
+        return sprintf('%s%s', self::HASSER_PREFIX, ucfirst($this->propertyName));
     }
 
-    /**
-     * @return array{string, string, string}
-     */
+    #[ArrayShape(['string', 'string', 'string'])]
     public function getAllSupportedGetterNames(): array
     {
         return [$this->getGetterName(), $this->getBoolIsGetterName(), $this->getBoolHasGetterName()];
@@ -164,9 +190,12 @@ class ModelPropertyMetadata
      */
     public function getExpectedType(): ?string
     {
-        $returnType = (new ReflectionMethod($this->getExcelColumn()->getTargetExcelCellClass(), 'getParsedValue'))->getReturnType();
+        // Metadata can come from maker or already existing model
+        $targetExcelCellClass = $this->getTargetExcelCellClass() ?? $this->getExcelColumn()->getTargetExcelCellClass();
 
-        return null !== $returnType ? $returnType->getName() : null;
+        $returnType = (new ReflectionMethod($targetExcelCellClass, 'getParsedValue'))->getReturnType();
+
+        return $returnType instanceof ReflectionNamedType ? $returnType->getName() : null;
     }
 
     public function getSetterName(): string

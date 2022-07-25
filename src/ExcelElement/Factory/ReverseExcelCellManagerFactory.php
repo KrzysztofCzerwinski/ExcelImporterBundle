@@ -24,7 +24,7 @@ class ReverseExcelCellManagerFactory
         foreach ($modelMetadata->getModelPropertiesMetadata() as $propertyMetadata) {
             $reverseExcelCells[$propertyMetadata->getPropertyName()] =
                 $this->reverseExcelCellFactory->resolveFromExcelCellClassAndExcelColumn(
-                    $propertyMetadata->getExcelColumn()->getTargetExcelCellClass(),
+                    $propertyMetadata->getTargetExcelCellClass(),
                     $propertyMetadata->getExcelColumn()
                 );
         }

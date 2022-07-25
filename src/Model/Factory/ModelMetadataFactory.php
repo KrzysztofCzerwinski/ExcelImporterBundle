@@ -114,10 +114,9 @@ class ModelMetadataFactory
      */
     private function validateExcelCellClass(ModelPropertyMetadata $modelPropertyMetadata): self
     {
-        $excelColumn = $modelPropertyMetadata->getExcelColumn();
-        if (!is_a($excelColumn->getTargetExcelCellClass(), AbstractExcelCell::class, true)) {
+        if (!is_a($modelPropertyMetadata->getTargetExcelCellClass(), AbstractExcelCell::class, true)) {
 
-            throw new UnexpectedColumnExcelCellClassException($excelColumn->getTargetExcelCellClass(), $modelPropertyMetadata->getPropertyName());
+            throw new UnexpectedColumnExcelCellClassException($modelPropertyMetadata->getTargetExcelCellClass(), $modelPropertyMetadata->getPropertyName());
         }
 
         return $this;
