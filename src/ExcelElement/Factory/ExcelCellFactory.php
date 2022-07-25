@@ -9,16 +9,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ExcelCellFactory
 {
-    /** @var ContainerInterface */
-    private $container;
-
-    public function __construct(ContainerInterface $container)
-    {
-        $this->container = $container;
+    public function __construct(
+        private ContainerInterface $container,
+    ) {
     }
 
-    public function makeSkeletonFromConfiguration(ExcelCellConfiguration $configuration): AbstractExcelCell
-    {
+    public function makeSkeletonFromConfiguration(
+        ExcelCellConfiguration $configuration,
+        array $options
+    ): AbstractExcelCell {
         $excelCellClass = $configuration->getExcelCellClass();
         /** @var AbstractExcelCell $excelCell */
         $excelCell = $this->container->get($excelCellClass);
@@ -26,6 +25,8 @@ class ExcelCellFactory
         return $excelCell
             ->setName($configuration->getCellName())
             ->setRequired($configuration->isCellRequired())
-            ->setValidators($configuration->getValidators());
+            ->setValidators($configuration->getValidators())
+            ->setOptions($options)
+        ;
     }
 }

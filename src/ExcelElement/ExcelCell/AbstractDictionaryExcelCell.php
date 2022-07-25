@@ -11,8 +11,7 @@ use function key_exists;
  */
 abstract class AbstractDictionaryExcelCell extends AbstractExcelCell
 {
-    /** @var ?array */
-    private $dictionary = null;
+    private ?array $dictionary = null;
 
     public function __construct(TranslatorInterface $translator)
     {
@@ -28,7 +27,7 @@ abstract class AbstractDictionaryExcelCell extends AbstractExcelCell
     /**
      * @inheritDoc
      */
-    protected function getParsedValue()
+    protected function getParsedValue(): mixed
     {
         $this->initializeDictionaryIfNotReady();
 

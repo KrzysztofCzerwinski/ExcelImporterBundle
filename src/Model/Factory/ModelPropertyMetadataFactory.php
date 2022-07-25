@@ -1,4 +1,5 @@
 <?php
+/** @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection */
 declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Model\Factory;
@@ -12,8 +13,14 @@ use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedAnnotationOptionExc
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionExpectedDataTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionValueDataTypeException;
 use Kczer\ExcelImporterBundle\Model\ModelPropertyMetadata;
+use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionProperty;
+use ReflectionUnionType;
+use function array_flip;
+use function array_intersect_key;
+use function array_map;
+use function current;
 
 class ModelPropertyMetadataFactory
 {
@@ -84,11 +91,22 @@ class ModelPropertyMetadataFactory
 
             return $excelColumn->getTargetExcelCellClass();
         }
-        $reflectionType = $reflectionProperty->getType();
 
-        return
-            $this->typeMappings[$reflectionType instanceof ReflectionNamedType ? $reflectionType->getName() : null] ??
-            StringExcelCell::class;
+        $reflectionType = $reflectionProperty->getType();
+        /** @noinspection PhpElementIsNotAvailableInCurrentPhpVersionInspection */
+        if ($reflectionType instanceof ReflectionIntersectionType) {
+
+            return StringExcelCell::class;
+        }
+
+        $types = ($reflectionType instanceof ReflectionUnionType) ?
+            array_flip(array_map(
+                static fn(ReflectionNamedType $reflectionNamedType): string => $reflectionNamedType->getName(),
+                $reflectionType->getTypes()
+            )) :
+            [$reflectionType?->getName() => true];
+
+        return current(array_intersect_key($this->typeMappings, $types)) ?: StringExcelCell::class;
     }
 
     private function resolveColumnRequired(ExcelColumn $excelColumn, ReflectionProperty $reflectionProperty): bool

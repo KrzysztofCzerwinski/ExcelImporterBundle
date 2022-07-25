@@ -112,7 +112,7 @@ class ModelExcelImporter extends AbstractExcelImporter
         return $this->importModelClass;
     }
 
-    public function setImportModelClass(string $importModelClass): self
+    public function setImportModelClass(string $importModelClass): static
     {
         $this->importModelClass = $importModelClass;
 
@@ -161,13 +161,17 @@ class ModelExcelImporter extends AbstractExcelImporter
      * @throws MissingExcelFieldException
      * @throws InvalidModelPropertyException
      */
-    protected function parseRawExcelRows(int $firstRowMode, ?string $indexBy, bool $namedColumnKeys): void
-    {
+    protected function parseRawExcelRows(
+        int     $firstRowMode,
+        ?string $indexBy,
+        bool    $namedColumnKeys,
+        array   $options,
+    ): void {
         $this->modelMetadata = $this->modelMetadataFactory->createMetadataFromModelClass($this->getImportModelClass(), $this->displayModelClass);
         if (null !== $indexBy) {
             $this->indexByColumnKey = $this->modelMetadata->getPropertyMetadataByName($indexBy)->getColumnKey();
         }
-        parent::parseRawExcelRows($firstRowMode, $indexBy, $namedColumnKeys);
+        parent::parseRawExcelRows($firstRowMode, $indexBy, $namedColumnKeys, $options);
         if (null !== $this->columnKeyMappings) {
             $this->modelMetadata->transformColumnKeyNameKeysToExcelColumnKeys($this->columnKeyMappings);
         }
@@ -188,12 +192,10 @@ class ModelExcelImporter extends AbstractExcelImporter
     }
 
     /**
-     * @return $this
-     *
      * @throws ExcelImportConfigurationException
      * @throws UnexpectedClassException
      */
-    protected function configureExcelCells(): AbstractExcelImporter
+    protected function configureExcelCells(): static
     {
         foreach ($this->modelMetadata->getModelPropertiesMetadata() as $columnKey => $propertyMetadata) {
             $propertyExcelColumn = $propertyMetadata->getExcelColumn();
