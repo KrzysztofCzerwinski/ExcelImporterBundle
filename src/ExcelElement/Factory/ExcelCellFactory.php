@@ -5,22 +5,25 @@ namespace Kczer\ExcelImporterBundle\ExcelElement\Factory;
 
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Configuration\ExcelCellConfiguration;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ExcelCellFactory
 {
-    public function __construct(
-        private ContainerInterface $container,
-    ) {
+    /** @var array<class-string<AbstractExcelCell>, AbstractExcelCell> */
+    private array $excelCells = [];
+
+    /**
+     * @noinspection PhpUnused method used by compiler pass
+     */
+    public function addExcelCell(AbstractExcelCell $excelCell): void
+    {
+        $this->excelCells[$excelCell::class] = $excelCell;
     }
 
     public function makeSkeletonFromConfiguration(
         ExcelCellConfiguration $configuration,
         array $options
     ): AbstractExcelCell {
-        $excelCellClass = $configuration->getExcelCellClass();
-        /** @var AbstractExcelCell $excelCell */
-        $excelCell = $this->container->get($excelCellClass);
+        $excelCell = $this->excelCells[$configuration->getExcelCellClass()];
 
         return $excelCell
             ->setName($configuration->getCellName())

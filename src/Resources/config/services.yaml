@@ -3,10 +3,6 @@ services:
     autowire: false
     autoconfigure: true
 
-  _instanceof:
-    Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell:
-      tags: ['excel_importer.excel_cell']
-
   Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory:
     autowire: true
     public: true
@@ -48,7 +44,6 @@ services:
 
   Kczer\ExcelImporterBundle\Test\TestDictionary:
     autowire: true
-    public: true
     shared: false
 
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\:
@@ -57,10 +52,8 @@ services:
     arguments:
       $translator: '@translator'
     shared: false
-    public: true
 
   Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell:
-    public: true
     arguments:
       $translator: '@translator'
       $trueValues: '%excel_cell.bool.true_values%'
@@ -72,7 +65,6 @@ services:
       $translator: '@translator'
     shared: false
     abstract: true
-    public: true
 
   Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\:
     resource: '../../ExcelElement/ReverseExcelCell/*'
@@ -100,7 +92,6 @@ services:
   Kczer\ExcelImporterBundle\Importer\Validator\Factory\ImportValidatorFactory:
 
   Kczer\ExcelImporterBundle\Command\MakeModelCommand:
-    public: true
     autowire: true
 
   Kczer\ExcelImporterBundle\Maker\ModelMaker:

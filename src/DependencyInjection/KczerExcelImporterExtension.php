@@ -5,7 +5,6 @@ namespace Kczer\ExcelImporterBundle\DependencyInjection;
 
 use Exception;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
-use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
