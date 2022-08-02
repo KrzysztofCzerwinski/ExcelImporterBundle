@@ -12,42 +12,27 @@ use function is_a;
 
 class ExcelCellConfiguration
 {
-    /** @var string */
-    private $excelCellClass;
-
-    /** @var string */
-    private $cellName;
-
-    /** @var bool */
-    private $cellRequired;
-
-    /** @var bool */
-    private $column;
-
-    /** @var AbstractCellValidator[] */
-    private $validators;
-
     /**
      * @param string $excelCellClass Excel cell class extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell
      * @param string $cellName Cell name in EXCEL file
      * @param bool $cellRequired Whether cell value is required in an EXCEL file
-     * @param bool $isColumn Whether cell value is taken from column in current row. static field otherwise
-     * @param AbstractCellValidator[] Validator classes extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\ValidatorInterface that will validate raw value
+     * @param bool $column Whether cell value is taken from column in current row. static field otherwise
+     * @param AbstractCellValidator[] $validators Validator classes extending Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\ValidatorInterface that will validate raw value
      *
      * @throws UnexpectedClassException
      */
-    public function __construct(string $excelCellClass, string $cellName, bool $cellRequired = true, bool $isColumn = true, array $validators = [])
-    {
+    public function __construct(
+        private string $excelCellClass,
+        private string $cellName,
+        private bool   $cellRequired = true,
+        private bool   $column = true,
+        private array  $validators = [],
+    ) {
         if (!is_a($excelCellClass, AbstractExcelCell::class, true)) {
 
             throw new UnexpectedExcelCellClassException($excelCellClass);
         }
-        $this->validateValidatorClasses($validators);
-        $this->excelCellClass = $excelCellClass;
-        $this->cellName = $cellName;
-        $this->cellRequired = $cellRequired;
-        $this->column = $isColumn;
-        $this->validators = $validators;
+        $this->validateValidatorClasses();
     }
 
     public function getExcelCellClass(): string
@@ -93,13 +78,11 @@ class ExcelCellConfiguration
 
 
     /**
-     * @param object[] $validators
-     *
      * @throws UnexpectedValidatorClassException
      */
-    private function validateValidatorClasses(array $validators): void
+    private function validateValidatorClasses(): void
     {
-        foreach ($validators as $validator) {
+        foreach ($this->validators as $validator) {
             if (!($validator instanceof AbstractCellValidator)) {
 
                 throw new UnexpectedValidatorClassException($validator::class);

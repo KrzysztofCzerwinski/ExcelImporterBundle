@@ -1,4 +1,5 @@
 <?php
+/** @noinspection PhpPropertyOnlyWrittenInspection */
 declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell;
@@ -8,23 +9,19 @@ use Throwable;
 
 class ReverseExcelCell
 {
-    /** @var string */
-    private $baseExcelCellClass;
+    private string $baseExcelCellClass;
 
-    public function setBaseExcelCellClass(string $baseExcelCellClass): ReverseExcelCell
+    public function setBaseExcelCellClass(string $baseExcelCellClass): static
     {
         $this->baseExcelCellClass = $baseExcelCellClass;
+
         return $this;
     }
 
     /**
-     * @param mixed $value
-     *
-     * @return string
-     *
      * @throws ValueNotStringReversableException
      */
-    public function getReversedExcelCellValue($value): string
+    public function getReversedExcelCellValue(mixed $value): string
     {
         try {
             return (string)$value;

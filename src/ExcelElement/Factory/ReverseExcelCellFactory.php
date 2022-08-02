@@ -5,13 +5,14 @@ namespace Kczer\ExcelImporterBundle\ExcelElement\Factory;
 
 use Kczer\ExcelImporterBundle\Annotation\ExcelColumn;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractDictionaryExcelCell;
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\BoolExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\DateTimeExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\BoolReverseExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\DateTimeReverseExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\DictionaryReverseExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\ReverseExcelCell;
-use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use function is_a;
 
 class ReverseExcelCellFactory
@@ -22,14 +23,20 @@ class ReverseExcelCellFactory
         DateTimeReverseExcelCell::class => DateTimeExcelCell::class,
     ];
 
-    /** @var ContainerInterface */
-    private $container;
+    /** @var array<class-string<AbstractExcelCell>, AbstractExcelCell> */
+    private array $excelCells = [];
 
     public function __construct(
-        ContainerInterface $container
-    )
+        private ContainerInterface $container,
+    ){
+    }
+
+    /**
+     * @noinspection PhpUnused method used by compiler pass
+     */
+    public function addExcelCell(AbstractExcelCell $excelCell): void
     {
-        $this->container = $container;
+        $this->excelCells[$excelCell::class] = $excelCell;
     }
 
     public function resolveFromExcelCellClassAndExcelColumn(string $targetExcelCellClass, ExcelColumn $excelColumn): ReverseExcelCell
@@ -48,7 +55,7 @@ class ReverseExcelCellFactory
         $reverseExcelCell = $this->container->get($targetReverseExcelCellClass);
         if ($reverseExcelCell instanceof DictionaryReverseExcelCell) {
             /** @var AbstractDictionaryExcelCell $dictionaryExcelCell */
-            $dictionaryExcelCell = $this->container->get($targetExcelCellClass);
+            $dictionaryExcelCell = $this->excelCells[$targetExcelCellClass];
             $reverseExcelCell->setDictionary($dictionaryExcelCell->getDictionary());
         } elseif ($reverseExcelCell instanceof DateTimeReverseExcelCell) {
             $reverseExcelCell->setReversedFormat($excelColumn->getReverseReverseDateTimeFormat());
