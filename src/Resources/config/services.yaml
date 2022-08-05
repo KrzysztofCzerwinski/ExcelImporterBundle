@@ -3,14 +3,16 @@ services:
     autowire: false
     autoconfigure: true
 
-  Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory:
-    autowire: true
-    public: true
-
-  Kczer\ExcelImporterBundle\Importer\ModelExcelImporter:
+  excel_importer.model_excel_importer:
+    class: Kczer\ExcelImporterBundle\Importer\ModelExcelImporter
     shared: false
-    autowire: true
     public: true
+    autowire: true
+
+  Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory:
+    public: true
+    arguments:
+      $container: '@service_container'
 
   Kczer\ExcelImporterBundle\Exporter\ModelExcelExporter:
     shared: false
