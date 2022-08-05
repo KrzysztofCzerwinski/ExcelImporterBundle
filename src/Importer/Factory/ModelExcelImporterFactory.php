@@ -33,14 +33,15 @@ class ModelExcelImporterFactory
      */
     public function createModelExcelImporter(string $modelClass, ?string $displayModelClass = null): ModelExcelImporter
     {
-        /** @var ModelExcelImporter $modelExcelImporter */
-        $modelExcelImporter = $this->container->get(ModelExcelImporter::class);
-
         if (null !== $displayModelClass && !is_a($displayModelClass, AbstractDisplayModel::class, true)) {
 
             throw new UnexpectedDisplayModelClassException($modelClass);
         }
 
-        return $modelExcelImporter->setImportModelClass($modelClass)->setDisplayModelClass($displayModelClass);
+        return $this->container
+            ->get('excel_importer.model_excel_importer')
+            ->setImportModelClass($modelClass)
+            ->setDisplayModelClass($displayModelClass)
+        ;
     }
 }
