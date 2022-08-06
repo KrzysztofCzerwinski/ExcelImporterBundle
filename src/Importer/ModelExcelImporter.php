@@ -198,14 +198,12 @@ class ModelExcelImporter extends AbstractExcelImporter
     protected function configureExcelCells(): static
     {
         foreach ($this->modelMetadata->getModelPropertiesMetadata() as $columnKey => $propertyMetadata) {
-            $propertyExcelColumn = $propertyMetadata->getExcelColumn();
-
             $this->addExcelCell(
                 $propertyMetadata->getTargetExcelCellClass(),
-                $propertyExcelColumn->getCellName(),
+                $propertyMetadata->getCellName(),
                 $columnKey,
                 $propertyMetadata->isRequired(),
-                !$this->fieldIdResolver->isColumnKeyFieldIdentifier($propertyExcelColumn->getColumnKey()),
+                !$this->fieldIdResolver->isColumnKeyFieldIdentifier($propertyMetadata->getColumnKey()),
                 $propertyMetadata->getValidators()
             );
         }

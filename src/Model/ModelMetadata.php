@@ -49,8 +49,8 @@ class ModelMetadata
     public function setModelPropertiesMetadata(array $modelPropertiesMetadata): self
     {
         $this->modelPropertiesMetadata = [];
-        foreach ($modelPropertiesMetadata as $columnKey => $modelPropertyMetadata) {
-            $this->addModelPropertyMetadata((string)$columnKey, $modelPropertyMetadata);
+        foreach ($modelPropertiesMetadata as $modelPropertyMetadata) {
+            $this->addModelPropertyMetadata($modelPropertyMetadata);
         }
 
         return $this;
@@ -68,8 +68,10 @@ class ModelMetadata
     /**
      * @throws DuplicateExcelIdentifierException
      */
-    public function addModelPropertyMetadata(string $columnIdentifier, ModelPropertyMetadata $modelPropertyMetadata): self
+    public function addModelPropertyMetadata(ModelPropertyMetadata $modelPropertyMetadata): self
     {
+        $columnIdentifier = $modelPropertyMetadata->getColumnKey();
+
         if (key_exists($columnIdentifier, $this->modelPropertiesMetadata)) {
 
             throw new DuplicateExcelIdentifierException($columnIdentifier);

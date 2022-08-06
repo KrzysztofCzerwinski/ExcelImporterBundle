@@ -37,10 +37,10 @@ services:
   Kczer\ExcelImporterBundle\Model\Factory\ModelPropertyMetadataFactory:
     arguments:
       $typeMappings: '%excel_cell.types%'
+      $translator: '@translator'
 
   Kczer\ExcelImporterBundle\Model\Factory\ModelMetadataFactory:
     arguments:
-      $translator: '@translator'
       $modelPropertyMetadataFactory: '@Kczer\ExcelImporterBundle\Model\Factory\ModelPropertyMetadataFactory'
       $annotationReader: '@annotations.reader'
 

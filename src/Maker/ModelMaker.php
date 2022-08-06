@@ -250,7 +250,6 @@ class ModelMaker
             $isInDisplayModel = $makeDisplayModelClass && $this->commandHelper->retrieveBoolean('Add field to display model?');
 
             $modelMetadata->addModelPropertyMetadata(
-                $columnKey,
                 $this->modelPropertyMetadataFactory->createForNonExistingProperty(
                     $columnKey,
                     $cellName,

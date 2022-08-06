@@ -13,10 +13,12 @@ use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedAnnotationOptionExc
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionExpectedDataTypeException;
 use Kczer\ExcelImporterBundle\Exception\Annotation\UnexpectedOptionValueDataTypeException;
 use Kczer\ExcelImporterBundle\Model\ModelPropertyMetadata;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use ReflectionIntersectionType;
 use ReflectionNamedType;
 use ReflectionProperty;
 use ReflectionUnionType;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use function array_flip;
 use function array_intersect_key;
 use function array_map;
@@ -28,7 +30,8 @@ class ModelPropertyMetadataFactory
      * @param array<string, class-string<AbstractExcelCell>> $typeMappings
      */
     public function __construct(
-        private array $typeMappings,
+        private array               $typeMappings,
+        private TranslatorInterface $translator,
     ) {
     }
 
@@ -36,17 +39,19 @@ class ModelPropertyMetadataFactory
      * @param AbstractCellValidator[] $validators
      */
     public function createModelPropertyMetadata(
-        string              $columnKey,
         ?ReflectionProperty $reflectionProperty,
         ?ExcelColumn        $excelColumn,
         array               $validators,
-        bool                $isInDisplayModel
-
+        bool                $isInDisplayModel,
+        int                 $propertyIndex
     ): ModelPropertyMetadata {
+        $columnKey = $this->resolveColumnKey($excelColumn, $propertyIndex);
+
         return (new ModelPropertyMetadata())
             ->setReflectionProperty($reflectionProperty)
             ->setExcelColumn($excelColumn)
             ->setColumnKey($columnKey)
+            ->setCellName($excelColumn->getCellName() ?? $columnKey)
             ->setPropertyName($reflectionProperty->getName())
             ->setInDisplayModel($isInDisplayModel)
             ->setValidators($validators)
@@ -83,6 +88,15 @@ class ModelPropertyMetadataFactory
                 )
             )
         ;
+    }
+
+    private function resolveColumnKey(ExcelColumn $excelColumn, int $propertyIndex): string
+    {
+        $columnKey = $excelColumn->getColumnKey();
+
+        return null !== $columnKey ?
+            $this->translator->trans($columnKey) :
+            Coordinate::stringFromColumnIndex($propertyIndex);
     }
 
     private function resolveTargetExcelCellClass(ExcelColumn $excelColumn, ReflectionProperty $reflectionProperty): string

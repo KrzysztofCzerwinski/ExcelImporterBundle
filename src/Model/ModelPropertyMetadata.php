@@ -33,6 +33,8 @@ class ModelPropertyMetadata
 
     private ?string $columnKey;
 
+    private ?string $cellName;
+
     private string $propertyName;
 
     private bool $inDisplayModel = true;
@@ -71,6 +73,18 @@ class ModelPropertyMetadata
     public function setColumnKey(?string $columnKey): static
     {
         $this->columnKey = $columnKey;
+
+        return $this;
+    }
+
+    public function getCellName(): ?string
+    {
+        return $this->cellName;
+    }
+
+    public function setCellName(?string $cellName): static
+    {
+        $this->cellName = $cellName;
 
         return $this;
     }
