@@ -43,7 +43,7 @@ class ReverseExcelCellManager
         $rawModelData = [];
         foreach ($this->modelMetadata->getModelPropertiesMetadata() as $propertyMetadata) {
             $propertyGetterName = $propertyMetadata->getFirstDefinedGetterName();
-            $rawModelData[$propertyMetadata->getExcelColumn()->getColumnKey()] =
+            $rawModelData[$propertyMetadata->getColumnKey()] =
                 $this->propertyReverseExcelCells[$propertyMetadata->getPropertyName()]->getReversedExcelCellValue($model->{$propertyGetterName}());
         }
 

@@ -19,7 +19,6 @@ use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionProperty;
-use Symfony\Contracts\Translation\TranslatorInterface;
 use function array_filter;
 use function array_map;
 use function is_a;
@@ -27,7 +26,6 @@ use function is_a;
 class ModelMetadataFactory
 {
     public function __construct(
-        private TranslatorInterface          $translator,
         private ModelPropertyMetadataFactory $modelPropertyMetadataFactory,
         private AnnotationReader             $annotationReader,
     ) {
@@ -52,6 +50,7 @@ class ModelMetadataFactory
         $isDisplayModelClassDefined = null !== $displayModelClass;
         $displayModelReflectionClass = $isDisplayModelClassDefined ? $this->obtainModelReflectionClass($displayModelClass) : null;
 
+        $propertyIndex = 1;
         $modelMetadata = (new ModelMetadata())->setModelClassName($modelReflectionClass->getName());
         foreach ($modelReflectionClass->getProperties() as $reflectionProperty) {
             $excelColumn =
@@ -62,13 +61,12 @@ class ModelMetadataFactory
                 continue;
             }
             $isPropertyInDisplayModel = $isDisplayModelClassDefined && $displayModelReflectionClass->hasProperty($reflectionProperty->getName());
-            $columnKey = $this->translator->trans($excelColumn->getColumnKey());
             $modelPropertyMetadata = $this->modelPropertyMetadataFactory->createModelPropertyMetadata(
-                $columnKey,
                 $reflectionProperty,
                 $excelColumn,
                 $this->getPropertyValidators($reflectionProperty),
-                $isPropertyInDisplayModel
+                $isPropertyInDisplayModel,
+                $propertyIndex
             );
             $this
                 ->validateExcelCellClass($modelPropertyMetadata)
@@ -82,7 +80,9 @@ class ModelMetadataFactory
                 ;
             }
 
-            $modelMetadata->addModelPropertyMetadata($columnKey, $modelPropertyMetadata);
+            $modelMetadata->addModelPropertyMetadata($modelPropertyMetadata);
+
+            $propertyIndex++;
         }
 
         return $modelMetadata;

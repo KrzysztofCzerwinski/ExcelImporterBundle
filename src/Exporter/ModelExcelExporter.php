@@ -318,8 +318,7 @@ class ModelExcelExporter
     {
         $headerData = [];
         foreach ($this->modelMetadata->getModelPropertiesMetadata() as $columnKey => $modelPropertyMetadata) {
-            $excelColumn = $modelPropertyMetadata->getExcelColumn();
-            $headerData[$columnKey] = null !== $this->columnKeyMappings ? $excelColumn->getColumnKey() : $excelColumn->getCellName();
+            $headerData[$columnKey] = null !== $this->columnKeyMappings ? $modelPropertyMetadata->getColumnKey() : $modelPropertyMetadata->getCellName();
         }
         array_unshift($this->rawModelsData, $headerData);
     }

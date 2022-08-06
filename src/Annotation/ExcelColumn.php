@@ -33,12 +33,12 @@ class ExcelColumn extends AbstractOptionsAnnotation
      *
      * @Annotation\Required()
      */
-    private string $columnKey;
+    private ?string $columnKey;
 
     /**
      * Column name- default to $columnKey
      */
-    private string $cellName;
+    private ?string $cellName;
 
     /**
      * Whether column cells are required or not
@@ -75,8 +75,8 @@ class ExcelColumn extends AbstractOptionsAnnotation
         $columnKey = null === $columnKey && is_string($data) ? $data : $columnKey;
 
         $this->targetExcelCellClass = $targetExcelCellClass ?? $data['targetExcelCellClass'] ?? null;
-        $this->columnKey = $columnKey ?? $data['columnKey'] ?? $data['value'] ?? '';
-        $this->cellName = $cellName ?? $data['cellName'] ?? $this->columnKey;
+        $this->columnKey = $columnKey ?? $data['columnKey'] ?? $data['value'] ?? null;
+        $this->cellName = $cellName ?? $data['cellName'] ?? null;
         $this->required = $required ?? $data['required'] ?? null;
     }
 
@@ -87,7 +87,7 @@ class ExcelColumn extends AbstractOptionsAnnotation
         ];
     }
 
-    public function getCellName(): string
+    public function getCellName(): ?string
     {
         return $this->cellName;
     }
@@ -100,7 +100,7 @@ class ExcelColumn extends AbstractOptionsAnnotation
         return $this->targetExcelCellClass;
     }
 
-    public function getColumnKey(): string
+    public function getColumnKey(): ?string
     {
         return $this->columnKey;
     }
