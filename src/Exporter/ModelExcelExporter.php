@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Exporter;
 
+use JetBrains\PhpStorm\ExpectedValues;
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ReverseExcelCellManagerFactory;
 use Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\ReverseExcelCellManager;
 use Kczer\ExcelImporterBundle\Exception\Annotation\AnnotationConfigurationException;
@@ -29,6 +30,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\NotFoundExceptionInterface;
 use ReflectionException;
 use function array_filter;
 use function array_keys;
@@ -45,53 +48,33 @@ use function ucfirst;
 
 class ModelExcelExporter
 {
-    public const EXCEL_FILE_EXTENSION = 'xlsx';
+    public const XLSX_FILE_EXTENSION = 'xlsx';
+
+    public const XLS_FILE_EXTENSION = 'xls';
 
 
-    /** @var ModelMetadataFactory */
-    private $modelMetadataFactory;
+    private ?ReverseExcelCellManager $reverseExcelCellManager = null;
 
-    /** @var ReverseExcelCellManagerFactory */
-    private $reverseExcelCellManagerFactory;
+    private ?array $columnKeyMappings = null;
 
-    /** @var ReverseExcelCellManager|null */
-    private $reverseExcelCellManager;
+    private ?string $modelClass = null;
 
-    /** @var TemporaryFileManager */
-    private $temporaryFileManager;
+    private ModelMetadata $modelMetadata;
 
-    /** @var array<string, string>|null */
-    private $columnKeyMappings;
-
-    /** @var ModelExcelImporterFactory */
-    private $modelExcelImporterFactory;
-
-    /** @var string|null */
-    private $modelClass;
-
-    /** @var ModelMetadata */
-    private $modelMetadata;
-
-    /** @var ExcelRowsMetadata */
-    private $excelRowsMetadata;
+    private ?ExcelRowsMetadata $excelRowsMetadata = null;
 
     /** @var object[] */
-    private $models = [];
+    private array $models = [];
 
     /** @var array<int, string[]> */
-    private $rawModelsData = [];
+    private array $rawModelsData = [];
 
     public function __construct(
-        ModelMetadataFactory $modelMetadataFactory,
-        ReverseExcelCellManagerFactory $reverseExcelCellManagerFactory,
-        TemporaryFileManager $temporaryFileManager,
-        ModelExcelImporterFactory $modelExcelImporterFactory
-    )
-    {
-        $this->modelMetadataFactory = $modelMetadataFactory;
-        $this->reverseExcelCellManagerFactory = $reverseExcelCellManagerFactory;
-        $this->temporaryFileManager = $temporaryFileManager;
-        $this->modelExcelImporterFactory = $modelExcelImporterFactory;
+        private ModelMetadataFactory           $modelMetadataFactory,
+        private ReverseExcelCellManagerFactory $reverseExcelCellManagerFactory,
+        private TemporaryFileManager           $temporaryFileManager,
+        private ModelExcelImporterFactory      $modelExcelImporterFactory
+    ) {
     }
 
     private function setExcelRowsMetadata(ExcelRowsMetadata $excelRowsMetadata): self
@@ -116,11 +99,15 @@ class ModelExcelExporter
      * @throws Writer\Exception
      * @throws FileLoadException
      */
-    public function exportModelsToNewFile(array $models, string $newFileNameWithoutExtension = null, bool $outputHeaders = true): string
-    {
+    public function exportModelsToNewFile(
+        array  $models,
+        string $newFileNameWithoutExtension = null,
+        bool   $outputHeaders = true,
+        #[ExpectedValues(valuesFromClass: self::class)] string $fileExtension = self::XLSX_FILE_EXTENSION,
+    ): string {
         if (empty($models)) {
 
-            return $this->createExcelFileWithEmptyModels($newFileNameWithoutExtension);
+            return $this->createExcelFileWithEmptyModels($newFileNameWithoutExtension, $fileExtension);
         }
 
         $this
@@ -128,58 +115,56 @@ class ModelExcelExporter
             ->prepareColumnKeyMappings()
             ->assignRawModelsData()
             ->transformRawModelsDataKeysIfRequired()
-            ->transformModelMetadataPropertyKeysIfRequired();
+            ->transformModelMetadataPropertyKeysIfRequired()
+        ;
         if ($outputHeaders) {
             $this->unshiftHeaderToRawModelsData();
         }
 
-        return $this->exportRawModelsDataToNewFile($outputHeaders, $newFileNameWithoutExtension);
+        return $this->exportRawModelsDataToNewFile($outputHeaders, $fileExtension, $newFileNameWithoutExtension);
     }
 
     /**
      * Merges models to data from existing EXCEL file and creates a new one
      *
-     * @param array $models
-     * @param string $excelFilePath
-     * @param string|null $newFileNameWithoutExtension
-     * @param string|callable|null $comparer Can be one of:
-     *                                       <ul>
-     *                                          <li>Model property name that will be compared between models to tell if they are the same </li>
-     *                                          <li>Callable that takes two arguments : <br> function ($model1, $model2): bool. Returns true if models are considered the same </li>
-     *                                          <li>NULL if no comparison needed </li>
-     *                                       </ul>
-     * @param bool $namedColumnNames
-     * @param int $firstRowMode
+     * @param (callable(object, object): bool)|string|null $comparer
+     * Can be one of:
+     *     <ul>
+     *        <li>Model property name that will be compared between models to tell if they are the same </li>
+     *        <li>Callable that takes two arguments : <br> function ($model1, $model2): bool. Returns true if models are considered the same </li>
+     *        <li>NULL if no comparison needed </li>
+     *     </ul>
      *
-     * @return string
      * @throws AnnotationConfigurationException
      * @throws ExcelImportConfigurationException
      * @throws FileAlreadyExistsException
      * @throws FileLoadException
      * @throws InvalidExcelImportException
      * @throws InvalidModelPropertyException
+     * @throws InvalidNamedColumnKeyException
+     * @throws MissingExcelColumnsException
+     * @throws MissingExcelFieldException
      * @throws NotGettablePropertyException
      * @throws ReflectionException
      * @throws TemporaryFileCreationException
      * @throws UnexpectedDisplayModelClassException
      * @throws UnexpectedExcelCellClassException
      * @throws Writer\Exception
-     * @throws InvalidNamedColumnKeyException
-     * @throws MissingExcelColumnsException
-     * @throws MissingExcelFieldException
+     * @throws ContainerExceptionInterface
+     * @throws NotFoundExceptionInterface
      */
     public function exportAndMergeModelsToExistingFile(
-        array  $models,
-        string $excelFilePath,
-        string $newFileNameWithoutExtension = null,
-               $comparer = null,
-        bool   $namedColumnNames = true,
-        int    $firstRowMode = AbstractExcelImporter::FIRST_ROW_MODE_SKIP
-    ): string
-    {
+        array                $models,
+        string               $excelFilePath,
+        string               $newFileNameWithoutExtension = null,
+        callable|string|null $comparer = null,
+        bool                 $namedColumnNames = true,
+        int                  $firstRowMode = AbstractExcelImporter::FIRST_ROW_MODE_SKIP,
+        #[ExpectedValues(valuesFromClass: self::class)] string $fileExtension = self::XLSX_FILE_EXTENSION,
+    ): string {
         if (empty($models)) {
 
-            return $this->createExcelFileWithEmptyModels($newFileNameWithoutExtension, $excelFilePath);
+            return $this->createExcelFileWithEmptyModels($newFileNameWithoutExtension, $fileExtension, $excelFilePath);
         }
         $this->assignBasicDataBasedOnModels($models);
 
@@ -197,7 +182,8 @@ class ModelExcelExporter
             ->assignRawModelsData()
             ->transformRawModelsDataKeysIfRequired()
             ->transformModelMetadataPropertyKeysIfRequired()
-            ->exportRawModelsDataToNewFile(true, $newFileNameWithoutExtension, $excelFilePath);
+            ->exportRawModelsDataToNewFile(true, $newFileNameWithoutExtension, $fileExtension, $excelFilePath)
+        ;
 
     }
 
@@ -245,7 +231,7 @@ class ModelExcelExporter
 
     private function prepareColumnKeyMappings(): self
     {
-        $importColumnKeyMappings = null !== $this->excelRowsMetadata ? $this->excelRowsMetadata->getColumnKeyMappings() : null;
+        $importColumnKeyMappings = $this->excelRowsMetadata?->getColumnKeyMappings();
         if (null !== $importColumnKeyMappings) {
             $this->columnKeyMappings = $importColumnKeyMappings;
 
@@ -325,12 +311,11 @@ class ModelExcelExporter
 
     /**
      * @param object[] $importedModels
-     * @param string|callable|null $comparer
      *
      * @throws InvalidModelPropertyException
      * @throws NotGettablePropertyException
      */
-    private function mergeImportedToNewModels(array $importedModels, $comparer): self
+    private function mergeImportedToNewModels(array $importedModels, string|callable|null $comparer): self
     {
         if (null === $comparer) {
             $this->models = array_merge($importedModels, $this->models);
@@ -368,15 +353,23 @@ class ModelExcelExporter
      * @throws FileLoadException
      * @throws Writer\Exception
      */
-    private function createExcelFileWithEmptyModels(?string $fileNameWithoutExtension, string $excelToCopyFileFullPath = null): string
-    {
+    private function createExcelFileWithEmptyModels(
+        ?string $fileNameWithoutExtension,
+        string  $fileExtension,
+        string  $excelToCopyFileFullPath = null
+    ): string {
         if (null === $excelToCopyFileFullPath) {
-            $newFilePath = $this->temporaryFileManager->createTmpFileWithNameAndExtension($fileNameWithoutExtension, self::EXCEL_FILE_EXTENSION);
-            IOFactory::createWriter(new Spreadsheet(), ucfirst(self::EXCEL_FILE_EXTENSION))->save($newFilePath);
+            $newFilePath = $this->temporaryFileManager->createTmpFileWithNameAndExtension($fileNameWithoutExtension, $fileExtension);
+            IOFactory::createWriter(new Spreadsheet(), ucfirst($fileExtension))->save($newFilePath);
 
             return $newFilePath;
         }
-        return $this->temporaryFileManager->createTmpFileWithExtensionFromExistingFile($fileNameWithoutExtension, self::EXCEL_FILE_EXTENSION, $excelToCopyFileFullPath);
+
+        return $this->temporaryFileManager->createTmpFileWithExtensionFromExistingFile(
+            $fileNameWithoutExtension,
+            $fileExtension,
+            $excelToCopyFileFullPath
+        );
     }
 
     /**
@@ -386,8 +379,12 @@ class ModelExcelExporter
      *
      * @noinspection PhpUnnecessaryCurlyVarSyntaxInspection
      */
-    private function exportRawModelsDataToNewFile(bool $outputHeaders, ?string $fileNameWithoutExtension, string $existingExcelFIleFullPath = null): string
-    {
+    private function exportRawModelsDataToNewFile(
+        bool    $outputHeaders,
+        ?string $fileNameWithoutExtension,
+        string  $fileExtension,
+        string  $existingExcelFIleFullPath = null
+    ): string {
         $spreadsheet = null !== $existingExcelFIleFullPath ? IOFactory::load($existingExcelFIleFullPath) : new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
@@ -409,8 +406,8 @@ class ModelExcelExporter
             }
         }
 
-        $newFilePath = $this->temporaryFileManager->createTmpFileWithNameAndExtension($fileNameWithoutExtension, self::EXCEL_FILE_EXTENSION);
-        IOFactory::createWriter($spreadsheet, ucfirst(self::EXCEL_FILE_EXTENSION))->save($newFilePath);
+        $newFilePath = $this->temporaryFileManager->createTmpFileWithNameAndExtension($fileNameWithoutExtension, $fileExtension);
+        IOFactory::createWriter($spreadsheet, ucfirst($fileExtension))->save($newFilePath);
 
         return $newFilePath;
     }
