@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace Kczer\ExcelImporterBundle\DependencyInjection\Compiler;
 
 use Kczer\ExcelImporterBundle\ExcelElement\Factory\ExcelCellFactory;
-use Kczer\ExcelImporterBundle\ExcelElement\ReverseExcelCell\ReverseExcelCell;
+use Kczer\ExcelImporterBundle\ExcelElement\Factory\ReverseExcelCellFactory;
 use Kczer\ExcelImporterBundle\Maker\ModelMaker;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -17,7 +17,7 @@ class ExcelCellRegistrationPass implements CompilerPassInterface
         if (in_array(false, array_map([$container, 'has'], [
             ModelMaker::class,
             ExcelCellFactory::class,
-            ReverseExcelCell::class,
+            ReverseExcelCellFactory::class,
         ]))) {
 
             return;
@@ -25,7 +25,7 @@ class ExcelCellRegistrationPass implements CompilerPassInterface
 
         $modelMakerDefinition = $container->getDefinition(ModelMaker::class);
         $excelCellFactoryDefinition = $container->getDefinition(ExcelCellFactory::class);
-        $reverseExcelCellFactoryDefinition = $container->getDefinition(ReverseExcelCell::class);
+        $reverseExcelCellFactoryDefinition = $container->getDefinition(ReverseExcelCellFactory::class);
         foreach ($container->findTaggedServiceIds('excel_importer.excel_cell') as $id => $tags) {
             if ($container->getDefinition($id)->isAbstract()) {
 
