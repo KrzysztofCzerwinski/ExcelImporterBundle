@@ -100,9 +100,9 @@ class ModelExcelExporter
      * @throws FileLoadException
      */
     public function exportModelsToNewFile(
-        array  $models,
-        string $newFileNameWithoutExtension = null,
-        bool   $outputHeaders = true,
+        array                                                  $models,
+        string                                                 $newFileNameWithoutExtension = null,
+        bool                                                   $outputHeaders = true,
         #[ExpectedValues(valuesFromClass: self::class)] string $fileExtension = self::XLSX_FILE_EXTENSION,
     ): string {
         if (empty($models)) {
@@ -121,7 +121,7 @@ class ModelExcelExporter
             $this->unshiftHeaderToRawModelsData();
         }
 
-        return $this->exportRawModelsDataToNewFile($outputHeaders, $fileExtension, $newFileNameWithoutExtension);
+        return $this->exportRawModelsDataToNewFile($outputHeaders, $newFileNameWithoutExtension, $fileExtension);
     }
 
     /**
