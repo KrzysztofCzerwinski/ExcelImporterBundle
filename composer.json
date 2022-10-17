@@ -22,6 +22,11 @@
             "Kczer\\ExcelImporterBundle\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Kczer\\ExcelImporterBundle\\Tests\\": "tests/"
+        }
+    },
     "require-dev": {
         "symfony/framework-bundle": "^4.3",
         "symfony/test-pack": "^1.0"

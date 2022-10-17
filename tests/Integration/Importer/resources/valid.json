@@ -1,0 +1,26 @@
+{
+  "1": {
+    "A": "string cell",
+    "B": "optional string cell",
+    "C": "int cell",
+    "D": "float cell",
+    "E": "date time cell",
+    "F": "bool cell"
+  },
+  "2": {
+    "A": "string1",
+    "B": "",
+    "C": "1",
+    "D": "123.123",
+    "E": "1/1/2022",
+    "F": "t"
+  },
+  "3": {
+    "A": "string2",
+    "B": "optionalString2",
+    "C": "2",
+    "D": "123.124",
+    "E": "1/2/2022",
+    "F": "n"
+  }
+}

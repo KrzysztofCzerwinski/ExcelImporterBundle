@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\Importer;
 
+use JetBrains\PhpStorm\ExpectedValues;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Configuration\ExcelCellConfiguration;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Validator\AbstractCellValidator;
@@ -215,7 +216,12 @@ abstract class AbstractExcelImporter
         }
         $this
             ->castRawExcelRowsString()
-            ->parseRawExcelRows(self::FIRST_ROW_MODE_DONT_SKIP, $indexBy, $namedColumnKeys, $options);
+            ->parseRawExcelRows(
+                $namedColumnKeys ? self::FIRST_ROW_MODE_DONT_SKIP : self::FIRST_ROW_MODE_SKIP_IF_INVALID,
+                $indexBy,
+                $namedColumnKeys,
+                $options
+            );
 
         return $this;
     }
@@ -239,11 +245,11 @@ abstract class AbstractExcelImporter
      * @throws UnexpectedExcelCellClassException
      */
     public function parseExcelFile(
-        string $excelFilePath,
-        string $indexBy = null,
-        bool   $namedColumnKeys = true,
-        int    $firstRowMode = self::FIRST_ROW_MODE_SKIP,
-        array  $options = [],
+        string                                              $excelFilePath,
+        string                                              $indexBy = null,
+        bool                                                $namedColumnKeys = true,
+        #[ExpectedValues(valuesFromClass: self::class)] int $firstRowMode = self::FIRST_ROW_MODE_SKIP,
+        array                                               $options = [],
     ): static
     {
         try {
