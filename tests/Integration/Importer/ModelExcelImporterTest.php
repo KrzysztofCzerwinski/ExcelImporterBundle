@@ -12,8 +12,10 @@ use Kczer\ExcelImporterBundle\Exception\MissingExcelColumnsException;
 use Kczer\ExcelImporterBundle\Exception\MissingExcelFieldException;
 use Kczer\ExcelImporterBundle\Exception\UnexpectedDisplayModelClassException;
 use Kczer\ExcelImporterBundle\Importer\Factory\ModelExcelImporterFactory;
+use Kczer\ExcelImporterBundle\Importer\Validator\UniqueModelValidator;
 use Kczer\ExcelImporterBundle\Tests\Integration\Importer\Model\TestNamedModel;
 use Kczer\ExcelImporterBundle\Tests\Integration\Importer\Model\TestTechnicalModel;
+use Kczer\ExcelImporterBundle\Tests\Integration\Importer\Model\TestValidatedModel;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -69,6 +71,28 @@ class ModelExcelImporterTest extends KernelTestCase
         $models = $modelExcelImporter->parseExcelFile(__DIR__ . '/resources/valid.xlsx')->getModels();
 
         $this->assertEquals($this->createExpectedTestNamedModels(), $models);
+    }
+
+    /**
+     * @throws InvalidNamedColumnKeyException
+     * @throws MissingExcelFieldException
+     * @throws FileLoadException
+     * @throws UnexpectedExcelCellClassException
+     * @throws UnexpectedDisplayModelClassException
+     * @throws MissingExcelColumnsException
+     */
+    public function testValidatesImportAndCells(): void
+    {
+        $modelExcelImporter = $this->modelExcelImporterFactory->createModelExcelImporter(TestValidatedModel::class);
+
+        $modelExcelImporter->parseExcelFile(__DIR__ . '/resources/invalid.xlsx');
+        $excelRows = $modelExcelImporter->getExcelRows();
+
+        $this->assertArrayHasKey(UniqueModelValidator::class, $modelExcelImporter->getImportRelateErrorMessages());
+        $this->assertEquals(
+            'string cell- Wartość powinna spełniać wyrażenie regularne "string\d+" | optional string cell- Maksymalna dlugość wartości to 10',
+            ($excelRows[3] ?? null)?->getMergedAllErrorMessages()
+        );
     }
 
     /**

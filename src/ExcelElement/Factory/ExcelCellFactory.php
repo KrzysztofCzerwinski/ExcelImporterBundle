@@ -21,9 +21,9 @@ class ExcelCellFactory
 
     public function makeSkeletonFromConfiguration(
         ExcelCellConfiguration $configuration,
-        array $options
+        array                  $options
     ): AbstractExcelCell {
-        $excelCell = $this->excelCells[$configuration->getExcelCellClass()];
+        $excelCell = clone $this->excelCells[$configuration->getExcelCellClass()];
 
         return $excelCell
             ->setName($configuration->getCellName())

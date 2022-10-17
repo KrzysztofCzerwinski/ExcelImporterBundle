@@ -37,51 +37,33 @@ use function current;
  */
 class ModelExcelImporter extends AbstractExcelImporter
 {
-    /** @var class-string<TM> */
-    private $importModelClass;
+    /** @var class-string<TM>|null */
+    private ?string $importModelClass = null;
 
     /** @var class-string<AbstractDisplayModel>|class-string<TD>|null */
-    private $displayModelClass = null;
+    private ?string $displayModelClass = null;
 
-    /** @var ModelMetadata */
-    private $modelMetadata;
+    private ModelMetadata $modelMetadata;
 
     /** @var object[] */
-    private $models = [];
+    private array $models = [];
 
     /** @var AbstractDisplayModel[] */
-    private $displayModels = [];
+    private array $displayModels = [];
 
     /** @var AbstractImportValidator[] */
-    private $validators = [];
-
-
-    /** @var ModelMetadataFactory */
-    private $modelMetadataFactory;
-
-    /** @var ModelFactory */
-    private $modelFactory;
-
-    /** @var ImportValidatorFactory */
-    private $importValidatorFactory;
-
-    /** @var TranslatorInterface */
-    private $translator;
+    private array $validators = [];
 
     public function __construct (
-        ExcelCellFactory       $excelCellFactory,
-        ExcelRowFactory        $excelRowFactory,
-        FieldIdResolver        $fieldIdResolver,
-        ModelMetadataFactory   $modelMetadataFactory,
-        ModelFactory           $modelFactory,
-        ImportValidatorFactory $importValidatorFactory,
-        TranslatorInterface    $translator
+        FieldIdResolver                $fieldIdResolver,
+        ExcelCellFactory               $excelCellFactory,
+        ExcelRowFactory                $excelRowFactory,
+        private ModelMetadataFactory   $modelMetadataFactory,
+        private ModelFactory           $modelFactory,
+        private ImportValidatorFactory $importValidatorFactory,
+        private TranslatorInterface    $translator,
     ) {
-        parent::__construct($excelCellFactory, $excelRowFactory, $fieldIdResolver);
-        $this->modelMetadataFactory = $modelMetadataFactory;
-        $this->modelFactory = $modelFactory;
-        $this->importValidatorFactory = $importValidatorFactory;
-        $this->translator = $translator;
+        parent::__construct($fieldIdResolver, $excelCellFactory, $excelRowFactory);
     }
 
     /**
