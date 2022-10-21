@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Kczer\ExcelImporterBundle\ExcelElement\Factory;
 
+use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractDictionaryExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\AbstractExcelCell;
 use Kczer\ExcelImporterBundle\ExcelElement\ExcelCell\Configuration\ExcelCellConfiguration;
 
@@ -24,6 +25,9 @@ class ExcelCellFactory
         array                  $options
     ): AbstractExcelCell {
         $excelCell = clone $this->excelCells[$configuration->getExcelCellClass()];
+        if ($excelCell instanceof AbstractDictionaryExcelCell) {
+            $excelCell->initializeDictionaryIfNotReady();
+        }
 
         return $excelCell
             ->setName($configuration->getCellName())
