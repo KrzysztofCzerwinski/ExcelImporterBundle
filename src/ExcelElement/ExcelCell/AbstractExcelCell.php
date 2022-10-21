@@ -19,11 +19,10 @@ abstract class AbstractExcelCell
 
     protected array $options;
 
-    /** @var AbstractCellValidator[] */
-    private array $validators = [];
-
     protected bool $validateObligatory = true;
 
+    /** @var AbstractCellValidator[] */
+    private array $validators = [];
 
     public function __construct(
         protected TranslatorInterface $translator,

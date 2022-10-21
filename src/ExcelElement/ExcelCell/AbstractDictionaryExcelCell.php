@@ -24,6 +24,11 @@ abstract class AbstractDictionaryExcelCell extends AbstractExcelCell
     public abstract function getDictionary(): array;
 
 
+    public function initializeDictionaryIfNotReady(): void
+    {
+        $this->dictionary = $this->dictionary ?? $this->getDictionary();
+    }
+
     /**
      * @inheritDoc
      */
@@ -47,10 +52,5 @@ abstract class AbstractDictionaryExcelCell extends AbstractExcelCell
         }
 
         return null;
-    }
-
-    private function initializeDictionaryIfNotReady(): void
-    {
-        $this->dictionary = $this->dictionary ?? $this->getDictionary();
     }
 }

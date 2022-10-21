@@ -4,3 +4,4 @@ vendor
 src/Test
 test
 var
+/.phpunit.result.cache
